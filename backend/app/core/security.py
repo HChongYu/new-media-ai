@@ -31,6 +31,10 @@ def decode_token(token: str) -> dict | None:
     """解码 JWT Token"""
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        print(f"[DEBUG] token 解码成功: {payload}")
         return payload
-    except Exception:
+    except Exception as e:
+        print(f"[DEBUG] token 解码失败: {e}")
+        print(f"[DEBUG] SECRET_KEY: {settings.SECRET_KEY}")
+        print(f"[DEBUG] ALGORITHM: {settings.ALGORITHM}")
         return None

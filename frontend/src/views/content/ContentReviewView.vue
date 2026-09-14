@@ -119,13 +119,10 @@ import PageHeader from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
 import MarkdownViewer from '@components/MarkdownViewer.vue'
 import ImageGrid from '@components/ImageGrid.vue'
-import { useContentStore } from '@stores/content'
-import { useImageStore } from '@stores/image'
+import { contentApi, imageApi, publishApi } from '@services/api'
 
 const route = useRoute()
 const router = useRouter()
-const contentStore = useContentStore()
-const imageStore = useImageStore()
 
 const contentId = ref<number>(Number(route.params.id))
 const content = ref<any>(null)
@@ -145,14 +142,14 @@ const platforms = [
 
 const fetchData = async () => {
   try {
-    const result = await contentStore.fetchContentDetail(contentId.value)
-    if (result) {
-      content.value = result
+    const result: any = await contentApi.detail(contentId.value)
+    if (result?.data) {
+      content.value = result.data
     }
     
-    const images = await imageStore.fetchContentImages(contentId.value)
-    if (images) {
-      contentImages.value = images
+    const imagesRes: any = await imageApi.byContent(contentId.value)
+    if (imagesRes?.data) {
+      contentImages.value = imagesRes.data
     }
   } catch (error) {
     console.error('Failed to fetch content:', error)
@@ -164,7 +161,7 @@ const approveContent = async () => {
   if (reviewForm.status === 'approved') {
     try {
       reviewing.value = true
-      await contentStore.reviewContent(contentId.value, {
+      await contentApi.review(contentId.value, {
         status: 'approved',
         review_note: reviewForm.review_note
       })
@@ -186,10 +183,10 @@ const rejectContent = async () => {
   
   try {
     reviewing.value = true
-    await contentStore.reviewContent(contentId.value, {
-      status: 'rejected',
-      review_note: reviewForm.review_note
-    })
+    await contentApi.review(contentId.value, {
+        status: 'rejected',
+        review_note: reviewForm.review_note
+      })
     ElMessage.success('审核已拒绝')
     router.push('/content')
   } catch (error) {
@@ -202,7 +199,7 @@ const rejectContent = async () => {
 const publishContent = async (platform: string) => {
   try {
     publishing.value[platform] = true
-    await contentStore.publishToPlatform(contentId.value, platform as any)
+    await publishApi.create(contentId.value, platform as any)
     ElMessage.success(`已发布到 ${platform}`)
   } catch (error) {
     console.error(`Failed to publish to ${platform}:`, error)
@@ -220,7 +217,7 @@ const deleteImage = async (image: any) => {
     await ElMessageBox.confirm('确定要删除这张图片吗？', '警告', {
       type: 'warning'
     })
-    await imageStore.deleteImage(image.id)
+    await imageApi.delete(image.id)
     ElMessage.success('删除成功')
     contentImages.value = contentImages.value.filter(i => i.id !== image.id)
   } catch (error) {

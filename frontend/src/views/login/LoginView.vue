@@ -106,6 +106,7 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@stores/user'
+import { authApi } from '@services/api'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
@@ -328,16 +329,20 @@ const handleLogin = async () => {
     await formRef.value.validate()
     loading.value = true
     
-    const success = await userStore.login(form.username, form.password)
+    const res: any = await authApi.login({ username: form.username, password: form.password })
+    const { token, user } = res.data
     
-    if (success) {
+    if (token && user) {
+      userStore.setToken(token)
+      userStore.setUser(user)
       ElMessage.success('登录成功')
       router.push('/')
     } else {
       ElMessage.error('登录失败，请检查用户名和密码')
     }
   } catch (error) {
-    console.error('Login validation error:', error)
+    console.error('Login error:', error)
+    ElMessage.error('登录失败，请检查用户名和密码')
   } finally {
     loading.value = false
   }

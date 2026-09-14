@@ -83,10 +83,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import PageHeader from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
 import StatusBadge from '@components/StatusBadge.vue'
-import { useTopicStore } from '@stores/topic'
+import { topicApi } from '@services/api'
 
 const router = useRouter()
-const topicStore = useTopicStore()
 
 const loading = ref(false)
 const topicList = ref([])
@@ -114,14 +113,15 @@ const fetchData = async () => {
       pageSize: pagination.value.pageSize,
       ...queryParams
     }
-    const result = await topicStore.fetchTopics(params)
-    if (result) {
-      topicList.value = result.list
-      pagination.value = result.pagination
+    const result: any = await topicApi.list(params)
+    if (result?.data) {
+      topicList.value = result.data.list
+      pagination.value = result.data.pagination
     }
   } catch (error) {
     console.error('Failed to fetch topics:', error)
   } finally {
+    console.log('[DEBUG] fetchData - 最后执行')
     loading.value = false
   }
 }
@@ -149,7 +149,7 @@ const deleteTopic = async (id: number) => {
     await ElMessageBox.confirm('确定要删除这个选题吗？', '警告', {
       type: 'warning'
     })
-    await topicStore.deleteTopic(id)
+    await topicApi.delete(id)
     ElMessage.success('删除成功')
     fetchData()
   } catch (error) {

@@ -99,10 +99,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import PageHeader from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
 import StatusBadge from '@components/StatusBadge.vue'
-import { useContentStore } from '@stores/content'
+import { contentApi } from '@services/api'
 
 const router = useRouter()
-const contentStore = useContentStore()
 
 const loading = ref(false)
 const contentList = ref([])
@@ -131,10 +130,10 @@ const fetchData = async () => {
       pageSize: pagination.value.pageSize,
       ...queryParams
     }
-    const result = await contentStore.fetchContents(params)
-    if (result) {
-      contentList.value = result.list
-      pagination.value = result.pagination
+    const result: any = await contentApi.list(params)
+    if (result?.data) {
+      contentList.value = result.data.list
+      pagination.value = result.data.pagination
     }
   } catch (error) {
     console.error('Failed to fetch contents:', error)
@@ -171,7 +170,7 @@ const deleteContent = async (id: number) => {
     await ElMessageBox.confirm('确定要删除这个内容吗？', '警告', {
       type: 'warning'
     })
-    await contentStore.deleteContent(id)
+    await contentApi.delete(id)
     ElMessage.success('删除成功')
     fetchData()
   } catch (error) {

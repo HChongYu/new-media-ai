@@ -114,6 +114,7 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@stores/user'
 import { useRouter } from 'vue-router'
+import { authApi } from '@services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -139,9 +140,14 @@ const breadcrumb = computed(() => {
   return matched
 })
 
-const handleLogout = () => {
-  userStore.logout()
-  router.push('/login')
+const handleLogout = async () => {
+  try {
+    await authApi.logout()
+    userStore.clearAuth()
+    router.push('/login')
+  } catch (error) {
+    console.error('Failed to logout:', error)
+  }
 }
 </script>
 

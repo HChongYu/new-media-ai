@@ -99,9 +99,7 @@ import { ElMessage } from 'element-plus'
 import PageHeader from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
 import StatusBadge from '@components/StatusBadge.vue'
-import { usePublishStore } from '@stores/publish'
-
-const publishStore = usePublishStore()
+import { publishApi } from '@services/api'
 
 const loading = ref(false)
 const publishList = ref([])
@@ -127,10 +125,10 @@ const fetchData = async () => {
     if (queryParams.platform) params.platform = queryParams.platform
     if (queryParams.status) params.status = queryParams.status
     
-    const result = await publishStore.fetchPublishHistory(params)
-    if (result) {
-      publishList.value = result.list
-      pagination.value = result.pagination
+    const result: any = await publishApi.history(params)
+    if (result?.data) {
+      publishList.value = result.data.list
+      pagination.value = result.data.pagination
     }
   } catch (error) {
     console.error('Failed to fetch publish history:', error)
@@ -151,7 +149,7 @@ const viewPost = (url: string) => {
 
 const retryPublish = async (record: any) => {
   try {
-    await publishStore.publishToPlatform(record.content_id, record.platform)
+    await publishApi.create(record.content_id, record.platform)
     ElMessage.success('重新发布成功')
     fetchData()
   } catch (error) {

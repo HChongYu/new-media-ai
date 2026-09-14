@@ -23,7 +23,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     if not user or not verify_password(request.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="用户名或密码错误")
 
-    token = create_token({"sub": user.id})
+    token = create_token({"sub": str(user.id)})
 
     return ResponseModel(
         data=LoginResponse(
@@ -41,8 +41,8 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/logout", response_model=ResponseModel)
-def logout(current_user: User = Depends(get_current_user)):
-    """用户登出（客户端清除 token 即可）"""
+def logout():
+    """用户登出（客户端清除 token 即可，无需认证）"""
     return ResponseModel(message="登出成功")
 
 

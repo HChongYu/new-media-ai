@@ -1,59 +1,39 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { api } from '@services/api'
 
 export const useUserStore = defineStore('user', () => {
+  // 状态
   const user = ref<User | null>(null)
   const token = ref<string | null>(localStorage.getItem('token'))
-  const isLoading = ref(false)
 
+  // 计算属性
   const isAuthenticated = computed(() => !!token.value && !!user.value)
 
-  const setUser = (userData: User | null) => {
-    user.value = userData
-  }
-
+  // 设置 token
   const setToken = (newToken: string) => {
     token.value = newToken
     localStorage.setItem('token', newToken)
   }
 
-  const clearUser = () => {
+  // 设置用户信息
+  const setUser = (userData: User | null) => {
+    user.value = userData
+  }
+
+  // 清除登录状态
+  const clearAuth = () => {
     user.value = null
     token.value = null
     localStorage.removeItem('token')
   }
 
-  const login = async (username: string, password: string) => {
-    isLoading.value = true
-    try {
-      // TODO: 调用登录API
-      const response = await api.auth.login({ username, password })
-      setToken(response.data.token)
-      setUser(response.data.user)
-      return true
-    } catch (error) {
-      console.error('Login failed:', error)
-      return false
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const logout = () => {
-    clearUser()
-  }
-
   return {
     user,
     token,
-    isLoading,
     isAuthenticated,
-    setUser,
     setToken,
-    clearUser,
-    login,
-    logout
+    setUser,
+    clearAuth
   }
 })
 

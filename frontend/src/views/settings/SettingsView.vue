@@ -161,10 +161,9 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import PageHeader from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
-import { useSettingsStore } from '@stores/settings'
+import { settingsApi } from '@services/api'
 import { useUserStore } from '@stores/user'
 
-const settingsStore = useSettingsStore()
 const userStore = useUserStore()
 
 const activeTab = ref('account')
@@ -209,8 +208,9 @@ const pageActions = [
 
 const fetchData = async () => {
   try {
-    const settings = await settingsStore.fetchSettings()
-    if (settings) {
+    const res: any = await settingsApi.get()
+    if (res?.data) {
+      const settings = res.data
       aiForm.value = {
         llm_provider: settings.llm_provider || '',
         llm_model: settings.llm_model || '',
@@ -260,11 +260,11 @@ const updatePassword = async () => {
 
 const updateAIConfig = async () => {
   try {
-    await settingsStore.updateSettings({
+    await settingsApi.update({
       llm_provider: aiForm.value.llm_provider,
       llm_model: aiForm.value.llm_model,
       api_key: aiForm.value.api_key
-    })
+    } as any)
     ElMessage.success('AI 配置保存成功')
   } catch (error) {
     console.error('Failed to update AI config:', error)
@@ -273,10 +273,10 @@ const updateAIConfig = async () => {
 
 const updatePreferences = async () => {
   try {
-    await settingsStore.updateSettings({
+    await settingsApi.update({
       default_tone: aiForm.value.default_tone,
       default_length: aiForm.value.default_length
-    })
+    } as any)
     ElMessage.success('偏好设置保存成功')
   } catch (error) {
     console.error('Failed to update preferences:', error)
@@ -285,9 +285,9 @@ const updatePreferences = async () => {
 
 const updatePlatformSettings = async () => {
   try {
-    await settingsStore.updateSettings({
+    await settingsApi.update({
       platform_settings: platformForm.value
-    })
+    } as any)
     ElMessage.success('平台设置保存成功')
   } catch (error) {
     console.error('Failed to update platform settings:', error)

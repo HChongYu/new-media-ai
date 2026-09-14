@@ -105,10 +105,9 @@ import BackButton from '@components/BackButton.vue'
 import PageHeader from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
 import ContentEditor from '@components/ContentEditor.vue'
-import { useTopicStore } from '@stores/topic'
+import { topicApi, contentApi } from '@services/api'
 
 const router = useRouter()
-const topicStore = useTopicStore()
 
 const topicSearch = ref('')
 const topics = ref([])
@@ -134,9 +133,9 @@ const filteredTopics = computed(() => {
 
 const fetchData = async () => {
   try {
-    const result = await topicStore.fetchTopics({ page: 1, pageSize: 100 })
-    if (result) {
-      topics.value = result.list
+    const result: any = await topicApi.list({ page: 1, pageSize: 100 })
+    if (result?.data) {
+      topics.value = result.data.list
     }
   } catch (error) {
     console.error('Failed to fetch topics:', error)
@@ -182,10 +181,10 @@ const generateContent = async () => {
       tone: contentForm.tone,
       length: contentForm.length
     }
-    const result = await contentStore.generateContent(selectedTopic.value.id, params)
-    if (result) {
-      contentForm.title = result.title
-      contentForm.content_text = result.content_text
+    const result: any = await contentApi.generate(selectedTopic.value.id, params)
+    if (result?.data) {
+      contentForm.title = result.data.title
+      contentForm.content_text = result.data.content_text
       ElMessage.success('内容生成成功')
     }
   } catch (error) {

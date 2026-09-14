@@ -14,7 +14,7 @@ from app.routers import auth, topics, contents, images, publish, settings as set
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
     # 启动时创建数据库表
-    # Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
     # 确保上传目录存在
     upload_dir = Path(settings.UPLOAD_DIR)
@@ -29,6 +29,14 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# 调试中间件：打印所有请求头
+@app.middleware("http")
+async def log_requests(request, call_next):
+    auth = request.headers.get("Authorization", "无")
+    print(f"[DEBUG] {request.method} {request.url.path} - Authorization: {auth[:30] if auth != '无' else '无'}...")
+    response = await call_next(request)
+    return response
 
 # CORS 配置
 app.add_middleware(

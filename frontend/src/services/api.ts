@@ -1,129 +1,261 @@
-import axios from 'axios'
-import { ElMessage } from 'element-plus'
-import { useUserStore } from '@stores/user'
+import request from './request'
 
-// 创建 axios 实例
-const service = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-})
-
-// 请求拦截器
-service.interceptors.request.use(
-  (config) => {
-    const userStore = useUserStore()
-    const token = userStore.token
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
-
-// 响应拦截器
-service.interceptors.response.use(
-  (response) => {
-    const res = response.data
-    
-    // 统一错误处理
-    if (res.code && res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
-      return Promise.reject(new Error(res.message || '请求失败'))
-    }
-    
-    return res
-  },
-  (error) => {
-    // 处理 HTTP 错误
-    if (error.response) {
-      const status = error.response.status
-      
-      switch (status) {
-        case 401:
-          ElMessage.error('未授权，请重新登录')
-          // TODO: 跳转登录页
-          break
-        case 403:
-          ElMessage.error('禁止访问')
-          break
-        case 404:
-          ElMessage.error('请求资源不存在')
-          break
-        case 500:
-          ElMessage.error('服务器错误')
-          break
-        default:
-          ElMessage.error(`请求失败: ${error.message}`)
-      }
-    } else if (error.request) {
-      ElMessage.error('网络错误，请检查网络连接')
-    } else {
-      ElMessage.error(error.message)
-    }
-    
-    return Promise.reject(error)
-  }
-)
-
-// API 方法封装
-export const api = {
-  // 认证相关
-  auth: {
-    login: (data: { username: string; password: string }) => service.post('/auth/login', data),
-    logout: () => service.post('/auth/logout'),
-    me: () => service.get('/auth/me')
-  },
-  
-  // 选题相关
-  topics: {
-    list: (params?: any) => service.get('/topics', { params }),
-    detail: (id: number) => service.get(`/topics/${id}`),
-    generate: (data: any) => service.post('/topics/generate', data),
-    create: (data: any) => service.post('/topics', data),
-    update: (id: number, data: any) => service.put(`/topics/${id}`, data),
-    delete: (id: number) => service.delete(`/topics/${id}`)
-  },
-  
-  // 内容相关
-  contents: {
-    list: (params?: any) => service.get('/contents', { params }),
-    detail: (id: number) => service.get(`/contents/${id}`),
-    generate: (topicId: number, params?: any) => service.post(`/topics/${topicId}/content`, params),
-    create: (data: any) => service.post('/contents', data),
-    update: (id: number, data: any) => service.put(`/contents/${id}`, data),
-    review: (id: number, data: any) => service.post(`/contents/${id}/review`, data),
-    delete: (id: number) => service.delete(`/contents/${id}`)
-  },
-  
-  // 图片相关
-  images: {
-    list: (params?: any) => service.get('/images', { params }),
-    byContent: (contentId: number) => service.get(`/contents/${contentId}/images`),
-    generate: (contentId: number, data: any) => service.post(`/contents/${contentId}/images/generate`, data),
-    delete: (id: number) => service.delete(`/images/${id}`)
-  },
-  
-  // 发布相关
-  publish: {
-    history: (params?: any) => service.get('/publish/history', { params }),
-    create: (contentId: number, platform: 'xiaohongshu' | 'wechat') => 
-      service.post(`/contents/${contentId}/publish/${platform}`),
-    delete: (id: number) => service.delete(`/publish/${id}`)
-  },
-  
-  // 设置相关
-  settings: {
-    get: () => service.get('/settings'),
-    update: (data: any) => service.put('/settings', data)
-  }
+// ========== 认证相关 ==========
+export const authApi = {
+  login: (data: { username: string; password: string }) =>
+    request.post('/auth/login', data),
+  logout: () =>
+    request.post('/auth/logout'),
+  me: () =>
+    request.get('/auth/me')
 }
 
-export default service
+// ========== 选题相关 ==========
+export const topicApi = {
+  list: (params?: TopicQueryParams) =>
+    request.get('/topics', { params }),
+  detail: (id: number) =>
+    request.get(`/topics/${id}`),
+  generate: (data: TopicGenerateParams) =>
+    request.post('/topics/generate', data),
+  create: (data: TopicCreateParams) =>
+    request.post('/topics', data),
+  update: (id: number, data: TopicUpdateParams) =>
+    request.put(`/topics/${id}`, data),
+  delete: (id: number) =>
+    request.delete(`/topics/${id}`)
+}
+
+// ========== 内容相关 ==========
+export const contentApi = {
+  list: (params?: ContentQueryParams) =>
+    request.get('/contents', { params }),
+  detail: (id: number) =>
+    request.get(`/contents/${id}`),
+  generate: (topicId: number, params?: ContentGenerateParams) =>
+    request.post(`/topics/${topicId}/content`, params),
+  create: (data: ContentCreateParams) =>
+    request.post('/contents', data),
+  update: (id: number, data: ContentUpdateParams) =>
+    request.put(`/contents/${id}`, data),
+  review: (id: number, data: ContentReviewParams) =>
+    request.post(`/contents/${id}/review`, data),
+  delete: (id: number) =>
+    request.delete(`/contents/${id}`)
+}
+
+// ========== 图片相关 ==========
+export const imageApi = {
+  list: (params?: ImageQueryParams) =>
+    request.get('/images', { params }),
+  byContent: (contentId: number) =>
+    request.get(`/contents/${contentId}/images`),
+  generate: (contentId: number, data: ImageGenerateParams) =>
+    request.post(`/contents/${contentId}/images/generate`, data),
+  delete: (id: number) =>
+    request.delete(`/images/${id}`)
+}
+
+// ========== 发布相关 ==========
+export const publishApi = {
+  history: (params?: PublishQueryParams) =>
+    request.get('/publish/history', { params }),
+  create: (contentId: number, platform: 'xiaohongshu' | 'wechat') =>
+    request.post(`/contents/${contentId}/publish/${platform}`),
+  delete: (id: number) =>
+    request.delete(`/publish/${id}`)
+}
+
+// ========== 设置相关 ==========
+export const settingsApi = {
+  get: () =>
+    request.get('/settings'),
+  update: (data: SettingsUpdateParams) =>
+    request.put('/settings', data)
+}
+
+// ========== 类型定义 ==========
+export interface User {
+  id: number
+  username: string
+  email: string
+  avatar?: string
+  role: 'admin' | 'editor' | 'viewer'
+  created_at: string
+}
+
+export interface Pagination {
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+export interface Topic {
+  id: number
+  title: string
+  description: string
+  status: 'draft' | 'pending' | 'approved' | 'rejected'
+  content_count: number
+  created_by: number
+  created_by_name?: string
+  created_at: string
+  approved_at?: string
+}
+
+export interface TopicQueryParams {
+  page?: number
+  pageSize?: number
+  status?: string
+  keyword?: string
+  start_date?: string
+  end_date?: string
+}
+
+export interface TopicGenerateParams {
+  keywords?: string[]
+  category?: string
+  target_audience?: string
+  content_style?: string
+  count?: number
+}
+
+export interface TopicCreateParams {
+  title: string
+  description: string
+  category?: string
+  tags?: string[]
+}
+
+export interface TopicUpdateParams {
+  title?: string
+  description?: string
+  status?: string
+  category?: string
+  tags?: string[]
+}
+
+export interface Content {
+  id: number
+  topic_id: number
+  topic_title?: string
+  title: string
+  content_text: string
+  content_type: 'article' | 'image'
+  word_count: number
+  status: 'draft' | 'reviewing' | 'approved' | 'published'
+  created_by: number
+  created_by_name?: string
+  reviewed_by?: number
+  reviewed_by_name?: string
+  created_at: string
+  reviewed_at?: string
+  published_at?: string
+}
+
+export interface ContentQueryParams {
+  page?: number
+  pageSize?: number
+  status?: string
+  content_type?: string
+  keyword?: string
+  start_date?: string
+  end_date?: string
+}
+
+export interface ContentGenerateParams {
+  platform?: 'xiaohongshu' | 'wechat'
+  tone?: 'professional' | 'casual' | 'enthusiastic'
+  length?: 'short' | 'medium' | 'long'
+}
+
+export interface ContentCreateParams {
+  topic_id: number
+  title: string
+  content_text: string
+  content_type?: 'article' | 'image'
+  platform?: 'xiaohongshu' | 'wechat'
+}
+
+export interface ContentUpdateParams {
+  title?: string
+  content_text?: string
+  status?: string
+}
+
+export interface ContentReviewParams {
+  status: 'approved' | 'rejected'
+  review_note?: string
+}
+
+export interface Image {
+  id: number
+  content_id: number
+  image_url: string
+  image_type: 'cover' | 'section' | 'summary'
+  prompt: string
+  generated_at: string
+  width: number
+  height: number
+  size?: number
+}
+
+export interface ImageQueryParams {
+  page?: number
+  pageSize?: number
+  content_id?: number
+  image_type?: string
+  start_date?: string
+  end_date?: string
+}
+
+export interface ImageGenerateParams {
+  image_type?: ('cover' | 'section' | 'summary')[]
+  count?: number
+  style?: 'minimalist' | 'professional' | 'creative' | 'elegant'
+  width?: number
+  height?: number
+}
+
+export interface PublishRecord {
+  id: number
+  content_id: number
+  content_title?: string
+  platform: 'xiaohongshu' | 'wechat'
+  post_url?: string
+  status: 'pending' | 'published' | 'failed'
+  published_at?: string
+  error_message?: string
+  created_at: string
+}
+
+export interface PublishQueryParams {
+  page?: number
+  pageSize?: number
+  platform?: string
+  status?: string
+  start_date?: string
+  end_date?: string
+}
+
+export interface Settings {
+  id: number
+  user_id: number
+  preferred_topics: string[]
+  preferred_formats: string[]
+  llm_provider?: string
+  llm_model?: string
+  image_style?: string
+  platform_settings?: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+export interface SettingsUpdateParams {
+  preferred_topics?: string[]
+  preferred_formats?: string[]
+  llm_provider?: string
+  llm_model?: string
+  image_style?: string
+  platform_settings?: Record<string, unknown>
+}

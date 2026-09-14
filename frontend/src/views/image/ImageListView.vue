@@ -55,9 +55,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import PageHeader from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
 import ImageGrid from '@components/ImageGrid.vue'
-import { useImageStore } from '@stores/image'
-
-const imageStore = useImageStore()
+import { imageApi } from '@services/api'
 
 const loading = ref(false)
 const imageList = ref([])
@@ -87,10 +85,10 @@ const fetchData = async () => {
     if (queryParams.image_type) params.image_type = queryParams.image_type
     if (queryParams.content_id) params.content_id = queryParams.content_id
     
-    const result = await imageStore.fetchImages(params)
-    if (result) {
-      imageList.value = result.list
-      pagination.value = result.pagination
+    const result: any = await imageApi.list(params)
+    if (result?.data) {
+      imageList.value = result.data.list
+      pagination.value = result.data.pagination
     }
   } catch (error) {
     console.error('Failed to fetch images:', error)
@@ -114,7 +112,7 @@ const deleteImage = async (image: any) => {
     await ElMessageBox.confirm('确定要删除这张图片吗？', '警告', {
       type: 'warning'
     })
-    await imageStore.deleteImage(image.id)
+    await imageApi.delete(image.id)
     ElMessage.success('删除成功')
     imageList.value = imageList.value.filter(i => i.id !== image.id)
   } catch (error) {

@@ -89,11 +89,10 @@ import BackButton from '@components/BackButton.vue'
 import PageHeader from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
 import StatusBadge from '@components/StatusBadge.vue'
-import { useTopicStore } from '@stores/topic'
+import { topicApi } from '@services/api'
 
 const route = useRoute()
 const router = useRouter()
-const topicStore = useTopicStore()
 
 const topicId = ref<number>(Number(route.params.id))
 const topic = ref<any>(null)
@@ -112,11 +111,11 @@ const sidebarActions = [
 
 const fetchData = async () => {
   try {
-    const result = await topicStore.fetchTopicDetail(topicId.value)
-    if (result) {
-      topic.value = result
-      topicContents.value = result.contents || []
-      topicImagesCount.value = result.images_count || 0
+    const result: any = await topicApi.detail(topicId.value)
+    if (result?.data) {
+      topic.value = result.data
+      topicContents.value = result.data.contents || []
+      topicImagesCount.value = result.data.images_count || 0
     }
   } catch (error) {
     console.error('Failed to fetch topic detail:', error)
