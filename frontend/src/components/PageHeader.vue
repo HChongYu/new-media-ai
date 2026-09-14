@@ -4,7 +4,7 @@
       <BackButton v-if="showBack" />
       <h1 class="page-title">{{ title }}</h1>
     </div>
-    <div v-if="actions.length > 0" class="header-right">
+    <div v-if="actions?.length > 0" class="header-right">
       <el-button
         v-for="(action, index) in actions"
         :key="index"

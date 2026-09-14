@@ -14,7 +14,7 @@ from app.routers import auth, topics, contents, images, publish, settings as set
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
     # 启动时创建数据库表
-    Base.metadata.create_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
 
     # 确保上传目录存在
     upload_dir = Path(settings.UPLOAD_DIR)

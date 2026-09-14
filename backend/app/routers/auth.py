@@ -15,6 +15,11 @@ router = APIRouter()
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     """用户登录"""
     user = db.query(User).filter(User.username == request.username).first()
+    print(f"[DEBUG] 登录尝试 - 用户名: {request.username}")
+    print(f"[DEBUG] 数据库查询结果 - user: {user}")
+    if user:
+        print(f"[DEBUG] 用户详情 - ID: {user.id}, Username: {user.username}, Email: {user.email}")
+        print(f"[DEBUG] 密码验证 - 传入密码: {request.password}, 哈希值: {user.hashed_password[:20]}...")
     if not user or not verify_password(request.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="用户名或密码错误")
 
