@@ -1,4 +1,5 @@
 import json
+import logging
 import math
 from datetime import datetime
 
@@ -20,6 +21,7 @@ from app.workflows.topic import generate_topics_workflow
 from app.workflows.content import generate_content_workflow
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("", response_model=ResponseModel[TopicListResponse])
@@ -127,13 +129,22 @@ async def generate_topics(
     current_user: User = Depends(get_current_user),
 ):
     """AI 生成选题"""
-    topics_data = await generate_topics_workflow(
-        keywords=request.keywords,
-        category=request.category,
-        target_audience=request.target_audience,
-        content_style=request.content_style,
-        count=request.count,
-    )
+    logger.info("开始调用 generate_topics_workflow...")
+    try:
+        topics_data = await generate_topics_workflow(
+            keywords=request.keywords,
+            category=request.category,
+            target_audience=request.target_audience,
+            content_style=request.content_style,
+            count=request.count,
+        )
+        logger.info("generate_topics_workflow 完成，获取到 %d 条选题", len(topics_data))
+    except Exception as e:
+        logger.error("generate_topics_workflow 失败: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=502,
+            detail=f"AI 生成选题失败，请检查 LLM 配置：{str(e)}",
+        )
 
     result = []
     for topic_data in topics_data:

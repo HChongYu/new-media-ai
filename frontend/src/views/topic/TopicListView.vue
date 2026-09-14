@@ -1,191 +1,304 @@
 <template>
   <div class="topic-list">
-    <PageHeader title="选题管理" :actions="pageActions" />
-    
+    <PageHeader title="选题管理" :actions="pageActions" @action="handlePageAction" />
+
     <Card>
-      <!-- 筛选条件 -->
-      <div class="filter-bar">
-        <el-form :inline="true">
-          <el-form-item label="状态">
-            <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
-              <el-option label="全部" value="" />
-              <el-option label="草稿" value="draft" />
-              <el-option label="待审核" value="pending" />
-              <el-option label="已通过" value="approved" />
-              <el-option label="已拒绝" value="rejected" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="关键词">
-            <el-input v-model="queryParams.keyword" placeholder="选题标题" clearable />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="fetchData">查询</el-button>
-            <el-button @click="resetFilter">重置</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-      
-      <!-- 选题列表 -->
-      <el-table
-        v-loading="loading"
-        :data="topicList"
-        style="width: 100%"
-        @sort-change="handleSortChange"
+      <DataList
+        ref="dataListRef"
+        :query-fields="queryFields"
+        :columns="columns"
+        :fetch-data="handleFetchData"
+        @cell-click="handleCellClick"
       >
-        <el-table-column prop="title" label="选题标题" min-width="200">
-          <template #default="{ row }">
-            <el-link type="primary" @click="viewTopic(row.id)">
-              {{ row.title }}
-            </el-link>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <StatusBadge :status="row.status" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="content_count" label="内容数" width="80" />
-        <el-table-column prop="created_by_name" label="创建人" width="100" />
-        <el-table-column prop="created_at" label="创建时间" width="160" sortable>
-          <template #default="{ row }">
-            {{ formatDate(row.created_at) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
-          <template #default="{ row }">
-            <el-button type="primary" link @click="viewTopic(row.id)">查看</el-button>
-            <el-button type="primary" link @click="editTopic(row.id)">编辑</el-button>
-            <el-button type="danger" link @click="deleteTopic(row.id)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      
-      <!-- 分页 -->
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :total="pagination.total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="fetchData"
-          @current-change="fetchData"
-        />
-      </div>
+        <!-- 选题标题列：可点击跳转 -->
+        <template #title="{ row }">
+          <el-link type="primary" @click="viewTopic(row.id)">
+            {{ row.title }}
+          </el-link>
+        </template>
+
+        <!-- 操作列 -->
+        <template #actions="{ row }">
+          <el-button type="primary" link @click="viewTopic(row.id)">查看</el-button>
+          <el-button type="primary" link @click="editTopic(row.id)">编辑</el-button>
+          <el-button type="danger" link @click="deleteTopic(row.id)">删除</el-button>
+        </template>
+      </DataList>
     </Card>
+
+    <!-- 生成选题对话框 -->
+    <el-dialog v-model="generateDialog.visible" title="生成选题" width="500px">
+      <DataForm
+        ref="generateFormRef"
+        v-model="generateDialog.form"
+        :fields="generateFields"
+        label-width="100px"
+      />
+      <template #footer>
+        <el-button @click="generateDialog.visible = false">取消</el-button>
+        <el-button type="primary" :loading="generateDialog.loading" @click="confirmGenerate">
+          确定生成
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 新建选题对话框 -->
+    <el-dialog v-model="createDialog.visible" title="新建选题" width="500px">
+      <DataForm
+        ref="createFormRef"
+        v-model="createDialog.form"
+        :fields="createFields"
+        label-width="100px"
+      />
+      <template #footer>
+        <el-button @click="createDialog.visible = false">取消</el-button>
+        <el-button type="primary" :loading="createDialog.loading" @click="confirmCreate">
+          确定新建
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageHeader from '@components/PageHeader.vue'
+import type { PageAction } from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
-import StatusBadge from '@components/StatusBadge.vue'
+import { DataList, DataForm } from '@components/data-driven'
+import type { FormField, TableColumn, DataListResult } from '@components/data-driven'
 import { topicApi } from '@services/api'
 
 const router = useRouter()
+const dataListRef = ref()
+const generateFormRef = ref()
+const createFormRef = ref()
 
-const loading = ref(false)
-const topicList = ref([])
-const pagination = ref({
-  total: 0,
-  page: 1,
-  pageSize: 10
-})
-
-const queryParams = reactive({
-  status: '',
-  keyword: ''
-})
-
-const pageActions = [
-  { label: '生成选题', type: 'primary', icon: 'LightBulb', key: 'generate' },
-  { label: '新建选题', type: 'success', icon: 'Plus', key: 'create' }
+// ---- 查询字段配置 ----
+const queryFields: FormField[] = [
+  {
+    prop: 'status',
+    label: '状态',
+    cellType: 'select',
+    span: 10,
+    dataSource: {
+      list: [
+        { label: '草稿', value: 'draft' },
+        { label: '待审核', value: 'pending' },
+        { label: '已通过', value: 'approved' },
+        { label: '已拒绝', value: 'rejected' },
+      ],
+    },
+  },
+  {
+    prop: 'keyword',
+    label: '关键词',
+    cellType: 'input',
+    span: 10,
+    placeholder: '选题标题',
+  },
 ]
 
-const fetchData = async () => {
-  loading.value = true
-  try {
-    const params = {
-      page: pagination.value.page,
-      pageSize: pagination.value.pageSize,
-      ...queryParams
-    }
-    const result: any = await topicApi.list(params)
-    if (result?.data) {
-      topicList.value = result.data.list
-      pagination.value = result.data.pagination
-    }
-  } catch (error) {
-    console.error('Failed to fetch topics:', error)
-  } finally {
-    console.log('[DEBUG] fetchData - 最后执行')
-    loading.value = false
+// ---- 表格列配置 ----
+const columns: TableColumn[] = [
+  { prop: 'title', label: '选题标题', minWidth: 200, slot: 'title' },
+  { prop: 'status', label: '状态', width: 100, cellType: 'status' },
+  { prop: 'content_count', label: '内容数', width: 80 },
+  { prop: 'created_by_name', label: '创建人', width: 100 },
+  {
+    prop: 'created_at',
+    label: '创建时间',
+    width: 160,
+    sortable: true,
+    formatter: (_row, _col, value) => formatDateTime(value),
+  },
+  { prop: 'actions', label: '操作', width: 160, fixed: 'right', slot: 'actions' },
+]
+
+// ---- 页头操作按钮 ----
+const pageActions: PageAction[] = [
+  { label: '生成选题', type: 'primary', icon: 'LightBulb', key: 'generate' },
+  { label: '新建选题', type: 'success', icon: 'Plus', key: 'create' },
+]
+
+// ---- 生成选题对话框 ----
+const generateDialog = reactive({
+  visible: false,
+  loading: false,
+  form: {} as Record<string, any>,
+})
+
+const generateFields: FormField[] = [
+  {
+    prop: 'keywords',
+    label: '关键词',
+    cellType: 'input',
+    span: 24,
+    required: true,
+    placeholder: '多个关键词用逗号分隔',
+    controlProps: { maxlength: 200, showWordLimit: true },
+  },
+  {
+    prop: 'category',
+    label: '分类',
+    cellType: 'input',
+    span: 24,
+    placeholder: '如：科技、生活、教育',
+  },
+  {
+    prop: 'target_audience',
+    label: '目标受众',
+    cellType: 'input',
+    span: 24,
+    placeholder: '如：年轻白领、宝妈',
+  },
+  {
+    prop: 'count',
+    label: '生成数量',
+    cellType: 'number',
+    span: 24,
+    defaultValue: 5,
+    controlProps: { min: 1, max: 20 },
+  },
+]
+
+// ---- 新建选题对话框 ----
+const createDialog = reactive({
+  visible: false,
+  loading: false,
+  form: {} as Record<string, any>,
+})
+
+const createFields: FormField[] = [
+  {
+    prop: 'title',
+    label: '选题标题',
+    cellType: 'input',
+    span: 24,
+    required: true,
+    placeholder: '请输入选题标题',
+  },
+  {
+    prop: 'description',
+    label: '选题描述',
+    cellType: 'textarea',
+    span: 24,
+    required: true,
+    placeholder: '请输入选题描述',
+    controlProps: { rows: 4, maxlength: 500, showWordLimit: true },
+  },
+  {
+    prop: 'category',
+    label: '分类',
+    cellType: 'input',
+    span: 24,
+    placeholder: '可选',
+  },
+]
+
+// ---- 数据加载回调 ----
+async function handleFetchData(params: Record<string, any>): Promise<DataListResult> {
+  const result: any = await topicApi.list(params)
+  return {
+    list: result?.data?.items || [],
+    total: result?.data?.pagination?.total || 0,
   }
 }
 
-const handleSortChange = (sort: any) => {
-  // TODO: 实现排序逻辑
+// ---- 日期格式化 ----
+function formatDateTime(value: string): string {
+  if (!value) return ''
+  const d = new Date(value)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-const resetFilter = () => {
-  queryParams.status = ''
-  queryParams.keyword = ''
-  fetchData()
+// ---- 页头按钮事件 ----
+function handlePageAction(action: PageAction) {
+  if (action.key === 'generate') {
+    generateDialog.form = { count: 5 }
+    generateDialog.visible = true
+  } else if (action.key === 'create') {
+    createDialog.form = {}
+    createDialog.visible = true
+  }
 }
 
-const viewTopic = (id: number) => {
+// ---- 确认生成选题 ----
+async function confirmGenerate() {
+  const valid = await generateFormRef.value?.validate()
+  if (!valid) return
+
+  generateDialog.loading = true
+  try {
+    // 将逗号分隔的关键词字符串转为数组
+    const form = { ...generateDialog.form }
+    if (typeof form.keywords === 'string') {
+      form.keywords = form.keywords.split(',').map((k: string) => k.trim()).filter(Boolean)
+    }
+    await topicApi.generate(form)
+    ElMessage.success('选题生成成功')
+    generateDialog.visible = false
+    dataListRef.value?.reload()
+  } catch (error) {
+    console.error('生成选题失败:', error)
+  } finally {
+    generateDialog.loading = false
+  }
+}
+
+// ---- 确认新建选题 ----
+async function confirmCreate() {
+  const valid = await createFormRef.value?.validate()
+  if (!valid) return
+
+  createDialog.loading = true
+  try {
+    await topicApi.create(createDialog.form)
+    ElMessage.success('新建选题成功')
+    createDialog.visible = false
+    dataListRef.value?.reload()
+  } catch (error) {
+    console.error('新建选题失败:', error)
+  } finally {
+    createDialog.loading = false
+  }
+}
+
+// ---- 表格事件 ----
+
+function handleCellClick(payload: { row: any; prop: string; value: any }) {
+  console.log('cell-click:', payload)
+}
+
+function viewTopic(id: number) {
   router.push(`/topics/${id}`)
 }
 
-const editTopic = (id: number) => {
+function editTopic(id: number) {
   router.push(`/topics/${id}/edit`)
 }
 
-const deleteTopic = async (id: number) => {
+async function deleteTopic(id: number) {
   try {
     await ElMessageBox.confirm('确定要删除这个选题吗？', '警告', {
-      type: 'warning'
+      type: 'warning',
     })
     await topicApi.delete(id)
     ElMessage.success('删除成功')
-    fetchData()
+    dataListRef.value?.refresh()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('Failed to delete topic:', error)
     }
   }
 }
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-onMounted(() => {
-  fetchData()
-})
 </script>
 
 <style scoped>
 .topic-list {
   padding: 20px;
-}
-
-.filter-bar {
-  margin-bottom: 20px;
-}
-
-.pagination-container {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
 }
 </style>

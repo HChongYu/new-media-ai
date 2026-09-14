@@ -17,7 +17,7 @@ export const topicApi = {
   detail: (id: number) =>
     request.get(`/topics/${id}`),
   generate: (data: TopicGenerateParams) =>
-    request.post('/topics/generate', data),
+    request.post('/topics/generate', data, { timeout: 120000 }),
   create: (data: TopicCreateParams) =>
     request.post('/topics', data),
   update: (id: number, data: TopicUpdateParams) =>
@@ -33,7 +33,7 @@ export const contentApi = {
   detail: (id: number) =>
     request.get(`/contents/${id}`),
   generate: (topicId: number, params?: ContentGenerateParams) =>
-    request.post(`/topics/${topicId}/content`, params),
+    request.post(`/topics/${topicId}/content`, params, { timeout: 120000 }),
   create: (data: ContentCreateParams) =>
     request.post('/contents', data),
   update: (id: number, data: ContentUpdateParams) =>
@@ -51,7 +51,7 @@ export const imageApi = {
   byContent: (contentId: number) =>
     request.get(`/contents/${contentId}/images`),
   generate: (contentId: number, data: ImageGenerateParams) =>
-    request.post(`/contents/${contentId}/images/generate`, data),
+    request.post(`/contents/${contentId}/images/generate`, data, { timeout: 120000 }),
   delete: (id: number) =>
     request.delete(`/images/${id}`)
 }

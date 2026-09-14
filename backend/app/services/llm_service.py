@@ -18,23 +18,35 @@ def get_llm_client():
         return _llm_client
 
     provider = settings.LLM_PROVIDER.lower()
+    api_key = settings.LLM_API_KEY.strip()
+
+    if not api_key:
+        raise ValueError(
+            "LLM_API_KEY 未配置，请在 backend/.env 文件中设置有效的 API Key。"
+            "可参考 .env.example 文件。"
+        )
 
     if provider == "anthropic":
         _llm_client = ChatAnthropic(
             model=settings.LLM_MODEL,
-            anthropic_api_key=settings.LLM_API_KEY,
+            anthropic_api_key=api_key,
             max_tokens=4096,
             temperature=0.7,
         )
     else:
         # 默认使用 OpenAI 兼容接口（也适用于本地模型）
-        _llm_client = ChatOpenAI(
-            model=settings.LLM_MODEL,
-            openai_api_key=settings.LLM_API_KEY,
-            openai_api_base=settings.LLM_API_BASE,
-            temperature=0.7,
-            max_tokens=4096,
-        )
+        client_kwargs = {
+            "model": settings.LLM_MODEL,
+            "openai_api_key": api_key,
+            "temperature": 0.7,
+            "max_tokens": 4096,
+            "timeout": 120,  # LLM 生成可能较慢，给 120 秒
+        }
+        # 仅在配置了 Base URL 时传入，避免空字符串覆盖默认值
+        api_base = settings.LLM_API_BASE.strip()
+        if api_base:
+            client_kwargs["openai_api_base"] = api_base
+        _llm_client = ChatOpenAI(**client_kwargs)
 
     return _llm_client
 
