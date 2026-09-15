@@ -58,7 +58,7 @@ const renderedMarkdown = computed(() => {
 <style scoped>
 .markdown-content {
   line-height: 1.8;
-  color: #303133;
+  color: #1F2329;
 }
 
 .markdown-content h1,
@@ -69,23 +69,23 @@ const renderedMarkdown = computed(() => {
 .markdown-content h6 {
   margin: 16px 0 8px;
   font-weight: 600;
-  color: #303133;
+  color: #1F2329;
 }
 
 .markdown-content h1 {
-  font-size: 24px;
-  border-bottom: 1px solid #e4e7ed;
+  font-size: 22px;
+  border-bottom: 1px solid #EBEDF0;
   padding-bottom: 8px;
 }
 
 .markdown-content h2 {
-  font-size: 20px;
-  border-bottom: 1px solid #e4e7ed;
+  font-size: 18px;
+  border-bottom: 1px solid #EBEDF0;
   padding-bottom: 8px;
 }
 
 .markdown-content h3 {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .markdown-content p {
@@ -104,18 +104,18 @@ const renderedMarkdown = computed(() => {
 }
 
 .markdown-content code {
-  background: #f5f7fa;
+  background: #F2F3F5;
   padding: 2px 6px;
   border-radius: 4px;
   font-family: 'Courier New', monospace;
-  font-size: 14px;
-  color: #e6a23c;
+  font-size: 13px;
+  color: #FF7D00;
 }
 
 .markdown-content pre {
-  background: #282c34;
+  background: #1E1E1E;
   padding: 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow-x: auto;
   margin: 12px 0;
 }
@@ -123,29 +123,30 @@ const renderedMarkdown = computed(() => {
 .markdown-content pre code {
   background: transparent;
   padding: 0;
-  color: #abb2bf;
-  font-size: 14px;
+  color: #D4D4D4;
+  font-size: 13px;
 }
 
 .markdown-content blockquote {
-  border-left: 4px solid #409eff;
+  border-left: 4px solid #3370FF;
   padding: 12px 16px;
   margin: 12px 0;
-  background: #f5f7fa;
+  background: #F5F6F7;
   border-radius: 0 6px 6px 0;
 }
 
 .markdown-content blockquote p {
   margin: 0;
-  color: #606266;
+  color: #4E5969;
 }
 
 .markdown-content a {
-  color: #409eff;
+  color: #3370FF;
   text-decoration: none;
 }
 
 .markdown-content a:hover {
+  color: #245BDB;
   text-decoration: underline;
 }
 
@@ -163,12 +164,12 @@ const renderedMarkdown = computed(() => {
 }
 
 .markdown-tip {
-  background: #f0f9ff;
-  border-left: 4px solid #409eff;
+  background: #EFF4FF;
+  border-left: 4px solid #3370FF;
 }
 
 .markdown-warning {
-  background: #fdf6ec;
-  border-left: 4px solid #e6a23c;
+  background: #FFF7E8;
+  border-left: 4px solid #FF7D00;
 }
 </style>

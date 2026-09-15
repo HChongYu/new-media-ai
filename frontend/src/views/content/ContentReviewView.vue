@@ -251,25 +251,28 @@ onMounted(() => {
 .content-info {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 16px;
   margin-bottom: 20px;
-  padding: 16px;
-  background: #f5f7fa;
+  padding: 14px 16px;
+  background: #F5F6F7;
   border-radius: 6px;
+  border: 1px solid #EBEDF0;
 }
 
 .info-item {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .info-item .label {
-  color: #909399;
+  color: #8F959E;
+  font-size: 13px;
 }
 
 .info-item .value {
-  color: #303133;
+  color: #1F2329;
   font-weight: 500;
+  font-size: 13px;
 }
 
 .content-body {

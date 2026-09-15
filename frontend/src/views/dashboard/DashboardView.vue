@@ -7,7 +7,7 @@
       <el-col :span="6">
         <el-card class="stat-card">
           <div class="stat-content">
-            <div class="stat-icon" style="background: #409eff;">
+            <div class="stat-icon" style="background: #3370FF;">
               <el-icon :size="32" color="#ffffff"><Document /></el-icon>
             </div>
             <div class="stat-info">
@@ -21,7 +21,7 @@
       <el-col :span="6">
         <el-card class="stat-card">
           <div class="stat-content">
-            <div class="stat-icon" style="background: #67c23a;">
+            <div class="stat-icon" style="background: #00B365;">
               <el-icon :size="32" color="#ffffff"><Edit /></el-icon>
             </div>
             <div class="stat-info">
@@ -35,7 +35,7 @@
       <el-col :span="6">
         <el-card class="stat-card">
           <div class="stat-content">
-            <div class="stat-icon" style="background: #e6a23c;">
+            <div class="stat-icon" style="background: #FF7D00;">
               <el-icon :size="32" color="#ffffff"><Picture /></el-icon>
             </div>
             <div class="stat-info">
@@ -49,7 +49,7 @@
       <el-col :span="6">
         <el-card class="stat-card">
           <div class="stat-content">
-            <div class="stat-icon" style="background: #f56c6c;">
+            <div class="stat-icon" style="background: #F53F3F;">
               <el-icon :size="32" color="#ffffff"><Share /></el-icon>
             </div>
             <div class="stat-info">
@@ -189,33 +189,39 @@ const handleAction = (action: any) => {
 .stat-value {
   font-size: 24px;
   font-weight: 600;
-  color: #303133;
+  color: #1F2329;
   margin-bottom: 4px;
 }
 
 .stat-label {
-  font-size: 14px;
-  color: #909399;
+  font-size: 13px;
+  color: #8F959E;
+  margin-top: 2px;
 }
 
 .activity-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .activity-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  background: #f5f7fa;
+  padding: 10px 12px;
+  background: #F5F6F7;
   border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.activity-item:hover {
+  background: #F2F3F5;
 }
 
 .activity-icon {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -223,23 +229,23 @@ const handleAction = (action: any) => {
 }
 
 .activity-icon.activity-content {
-  background: #e6f7ff;
-  color: #409eff;
+  background: #EFF4FF;
+  color: #3370FF;
 }
 
 .activity-icon.activity-topic {
-  background: #fdf6ec;
-  color: #e6a23c;
+  background: #FFF7E8;
+  color: #FF7D00;
 }
 
 .activity-icon.activity-image {
-  background: #fdf5f6;
-  color: #f56c6c;
+  background: #FFECE8;
+  color: #F53F3F;
 }
 
 .activity-icon.activity-publish {
-  background: #f0f9ff;
-  color: #67c23a;
+  background: #E8FFEA;
+  color: #00B365;
 }
 
 .activity-content {
@@ -247,14 +253,14 @@ const handleAction = (action: any) => {
 }
 
 .activity-title {
-  font-size: 14px;
-  color: #303133;
-  margin-bottom: 4px;
+  font-size: 13px;
+  color: #1F2329;
+  margin-bottom: 2px;
 }
 
 .activity-time {
   font-size: 12px;
-  color: #909399;
+  color: #8F959E;
 }
 
 .quick-actions {

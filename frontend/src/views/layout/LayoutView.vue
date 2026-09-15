@@ -154,42 +154,84 @@ const handleLogout = async () => {
 <style scoped>
 .layout-container {
   height: 100vh;
-  background: #f5f7fa;
+  background: #F5F6F7;
 }
 
 .sidebar {
-  background: #303133;
+  background: #FFFFFF;
+  border-right: 1px solid #EBEDF0;
   display: flex;
   flex-direction: column;
 }
 
 .sidebar-header {
-  padding: 20px;
+  padding: 20px 16px;
   text-align: center;
+  border-bottom: 1px solid #EBEDF0;
 }
 
 .logo {
-  color: #ffffff;
-  font-size: 18px;
+  color: #1F2329;
+  font-size: 16px;
   font-weight: 600;
   margin: 0;
+  letter-spacing: 0.5px;
 }
 
 .sidebar-menu {
   flex: 1;
   border-right: none;
+  padding: 8px;
+}
+
+/* 飞书风格菜单项 */
+:deep(.el-menu-item) {
+  border-radius: 6px;
+  margin-bottom: 2px;
+  color: #4E5969;
+  height: 40px;
+  line-height: 40px;
+}
+
+:deep(.el-menu-item:hover) {
+  background: #F2F3F5;
+  color: #1F2329;
+}
+
+:deep(.el-menu-item.is-active) {
+  background: #EFF4FF;
+  color: #3370FF;
+  font-weight: 500;
+}
+
+:deep(.el-sub-menu__title) {
+  border-radius: 6px;
+  margin-bottom: 2px;
+  color: #4E5969;
+  height: 40px;
+  line-height: 40px;
+}
+
+:deep(.el-sub-menu__title:hover) {
+  background: #F2F3F5;
+  color: #1F2329;
+}
+
+:deep(.el-sub-menu .el-menu-item) {
+  padding-left: 52px !important;
+  min-width: auto;
 }
 
 .sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid #404040;
+  padding: 12px 16px;
+  border-top: 1px solid #EBEDF0;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .user-details {
@@ -198,8 +240,8 @@ const handleLogout = async () => {
 }
 
 .user-name {
-  color: #ffffff;
-  font-size: 14px;
+  color: #1F2329;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -207,17 +249,19 @@ const handleLogout = async () => {
 }
 
 .user-role {
-  color: #909399;
+  color: #8F959E;
   font-size: 12px;
 }
 
 .header {
-  background: #ffffff;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   padding: 0 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 52px;
+  border-bottom: 1px solid #EBEDF0;
 }
 
 .header-left {
@@ -227,12 +271,17 @@ const handleLogout = async () => {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .bell {
-  color: #606266;
+  color: #4E5969;
   cursor: pointer;
+  transition: color 0.2s;
+}
+
+.bell:hover {
+  color: #3370FF;
 }
 
 .notification {
@@ -242,6 +291,6 @@ const handleLogout = async () => {
 .main {
   padding: 20px;
   overflow-y: auto;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 52px);
 }
 </style>

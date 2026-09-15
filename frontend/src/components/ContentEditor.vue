@@ -158,24 +158,24 @@ const formatText = (format: string) => {
 
 <style scoped>
 .content-editor {
-  background: #ffffff;
+  background: #FFFFFF;
   border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #EBEDF0;
   overflow: hidden;
 }
 
 .editor-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e4e7ed;
+  padding: 14px 20px;
+  border-bottom: 1px solid #EBEDF0;
 }
 
 .editor-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
-  background: #f5f7fa;
-  border-bottom: 1px solid #e4e7ed;
+  padding: 10px 20px;
+  background: #F5F6F7;
+  border-bottom: 1px solid #EBEDF0;
 }
 
 .editor-body {
@@ -188,11 +188,11 @@ const formatText = (format: string) => {
   padding: 20px;
   border: none;
   resize: vertical;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   line-height: 1.8;
-  color: #303133;
-  background: #ffffff;
+  color: #1F2329;
+  background: #FFFFFF;
 }
 
 .editor-body textarea:focus {
@@ -201,22 +201,22 @@ const formatText = (format: string) => {
 
 .editor-stats {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   font-size: 12px;
-  color: #909399;
+  color: #8F959E;
 }
 
 .editor-preview {
-  border-top: 1px solid #e4e7ed;
+  border-top: 1px solid #EBEDF0;
 }
 
 .editor-preview h4 {
-  padding: 12px 20px;
+  padding: 10px 20px;
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  background: #f5f7fa;
-  color: #606266;
+  background: #F5F6F7;
+  color: #4E5969;
 }
 
 .preview-content {
@@ -226,9 +226,9 @@ const formatText = (format: string) => {
 }
 
 .preview-content h1 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
-  margin-bottom: 20px;
-  color: #303133;
+  margin-bottom: 16px;
+  color: #1F2329;
 }
 </style>

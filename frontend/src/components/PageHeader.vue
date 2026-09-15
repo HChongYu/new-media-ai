@@ -61,9 +61,9 @@ export interface PageAction {
 }
 
 .page-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  color: #303133;
+  color: #1F2329;
   margin: 0;
 }
 </style>

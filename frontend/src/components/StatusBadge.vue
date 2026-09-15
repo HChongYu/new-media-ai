@@ -28,44 +28,45 @@ const statusText = computed(() => {
 <style scoped>
 .status-badge {
   display: inline-block;
-  padding: 4px 12px;
+  padding: 2px 10px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 500;
+  line-height: 20px;
 }
 
 .status-draft {
-  background: #f0f0f0;
-  color: #909399;
+  background: #F2F3F5;
+  color: #8F959E;
 }
 
 .status-pending {
-  background: #fdf6ec;
-  color: #e6a23c;
+  background: #FFF7E8;
+  color: #FF7D00;
 }
 
 .status-approved {
-  background: #f0f9ff;
-  color: #409eff;
+  background: #EFF4FF;
+  color: #3370FF;
 }
 
 .status-rejected {
-  background: #fef0f0;
-  color: #f56c6c;
+  background: #FFECE8;
+  color: #F53F3F;
 }
 
 .status-reviewing {
-  background: #f4f4f5;
-  color: #909399;
+  background: #F2F3F5;
+  color: #8F959E;
 }
 
 .status-published {
-  background: #f0f9ff;
-  color: #67c23a;
+  background: #E8FFEA;
+  color: #00B365;
 }
 
 .status-failed {
-  background: #fef0f0;
-  color: #f56c6c;
+  background: #FFECE8;
+  color: #F53F3F;
 }
 </style>

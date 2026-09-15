@@ -286,7 +286,7 @@ const initParticles = () => {
         ctx.beginPath()
         ctx.moveTo(p.x, p.y)
         ctx.lineTo(mouse.x, mouse.y)
-        ctx.strokeStyle = `rgba(102, 126, 234, ${0.3 * (1 - dist / 180)})`
+        ctx.strokeStyle = `rgba(51, 112, 255, ${0.25 * (1 - dist / 180)})`
         ctx.lineWidth = 0.8
         ctx.stroke()
       }
@@ -356,7 +356,7 @@ const handleLogin = async () => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  background: linear-gradient(135deg, #EEF2FF, #F5F6F7, #E8F0FE);
   overflow: hidden;
   position: relative;
   cursor: default;
@@ -373,40 +373,40 @@ const handleLogin = async () => {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.6;
+  opacity: 0.4;
   animation: float 20s ease-in-out infinite;
 }
 
 .orb-1 {
   width: 400px; height: 400px;
-  background: radial-gradient(circle, #667eea, transparent);
+  background: radial-gradient(circle, #3370FF, transparent);
   top: -100px; left: -100px;
   animation-duration: 18s;
 }
 .orb-2 {
   width: 350px; height: 350px;
-  background: radial-gradient(circle, #764ba2, transparent);
+  background: radial-gradient(circle, #5B8DEF, transparent);
   bottom: -80px; right: -80px;
   animation-duration: 22s;
   animation-delay: -5s;
 }
 .orb-3 {
   width: 300px; height: 300px;
-  background: radial-gradient(circle, #f093fb, transparent);
+  background: radial-gradient(circle, #7B61FF, transparent);
   top: 50%; left: 60%;
   animation-duration: 25s;
   animation-delay: -10s;
 }
 .orb-4 {
   width: 250px; height: 250px;
-  background: radial-gradient(circle, #4facfe, transparent);
+  background: radial-gradient(circle, #36CFC9, transparent);
   top: 30%; left: 10%;
   animation-duration: 20s;
   animation-delay: -3s;
 }
 .orb-5 {
   width: 200px; height: 200px;
-  background: radial-gradient(circle, #43e97b, transparent);
+  background: radial-gradient(circle, #00B365, transparent);
   bottom: 20%; left: 40%;
   animation-duration: 23s;
   animation-delay: -7s;
@@ -432,7 +432,7 @@ const handleLogin = async () => {
   width: 400px;
   height: 400px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(102, 126, 234, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(51, 112, 255, 0.1) 0%, transparent 70%);
   transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 1;
@@ -457,13 +457,13 @@ const handleLogin = async () => {
     width: 4px;
     height: 4px;
     opacity: 0.6;
-    border: 2px solid rgba(255, 255, 255, 0.5);
+    border: 2px solid rgba(51, 112, 255, 0.4);
   }
   100% {
     width: 300px;
     height: 300px;
     opacity: 0;
-    border: 2px solid rgba(102, 126, 234, 0);
+    border: 2px solid rgba(51, 112, 255, 0);
   }
 }
 
@@ -478,14 +478,14 @@ const handleLogin = async () => {
 .login-box {
   width: 420px;
   padding: 48px 40px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  border: 1px solid rgba(222, 224, 227, 0.6);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   box-shadow:
-    0 25px 60px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 12px 40px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.04);
   position: relative;
   z-index: 2;
   animation: cardEntry 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -497,8 +497,8 @@ const handleLogin = async () => {
 
 .login-box:hover {
   box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 16px 48px rgba(0, 0, 0, 0.1),
+    0 6px 16px rgba(0, 0, 0, 0.05);
 }
 
 @keyframes cardEntry {
@@ -512,7 +512,7 @@ const handleLogin = async () => {
 .card-spotlight {
   position: absolute;
   inset: 0;
-  border-radius: 20px;
+  border-radius: 16px;
   pointer-events: none;
   z-index: 0;
   transition: background 0.15s ease-out;
@@ -522,12 +522,12 @@ const handleLogin = async () => {
 .rotating-border {
   position: absolute;
   inset: -2px;
-  border-radius: 22px;
+  border-radius: 18px;
   background: conic-gradient(
     from 0deg,
-    #667eea, #764ba2, #f093fb, #4facfe, #43e97b,
-    #667eea, #764ba2, #f093fb, #4facfe, #43e97b,
-    #667eea
+    #3370FF, #5B8DEF, #7B61FF, #36CFC9, #00B365,
+    #3370FF, #5B8DEF, #7B61FF, #36CFC9, #00B365,
+    #3370FF
   );
   animation: rotateBorder 6s linear infinite;
   opacity: 0;
@@ -536,7 +536,7 @@ const handleLogin = async () => {
 }
 
 .login-box:hover .rotating-border {
-  opacity: 0.7;
+  opacity: 0.5;
 }
 
 @keyframes rotateBorder {
@@ -549,8 +549,8 @@ const handleLogin = async () => {
   content: '';
   position: absolute;
   inset: 2px;
-  border-radius: 20px;
-  background: rgba(15, 12, 41, 0.9);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
 }
 
 /* ===== Logo ===== */
@@ -558,8 +558,8 @@ const handleLogin = async () => {
   width: 60px;
   height: 60px;
   margin: 0 auto 24px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-radius: 16px;
+  background: linear-gradient(135deg, #3370FF, #5B8DEF);
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -567,7 +567,7 @@ const handleLogin = async () => {
   animation: logoEntry 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
   opacity: 0;
   transform: scale(0) rotate(-180deg);
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 8px 24px rgba(51, 112, 255, 0.35);
   position: relative;
   z-index: 1;
 }
@@ -576,9 +576,9 @@ const handleLogin = async () => {
   content: '';
   position: absolute;
   inset: -4px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  opacity: 0.3;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #3370FF, #5B8DEF);
+  opacity: 0.2;
   filter: blur(12px);
   z-index: -1;
   animation: logoPulse 3s ease-in-out infinite;
@@ -611,13 +611,13 @@ const handleLogin = async () => {
 
 /* 渐变流光标题 */
 .gradient-text {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   margin-bottom: 10px;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   background: linear-gradient(
     90deg,
-    #667eea, #f093fb, #4facfe, #43e97b, #667eea
+    #3370FF, #5B8DEF, #7B61FF, #36CFC9, #3370FF
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -635,7 +635,7 @@ const handleLogin = async () => {
 /* 打字机副标题 */
 .typing-text {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.55);
+  color: #8F959E;
   min-height: 20px;
   animation: fadeSlideUp 0.6s ease 0.25s forwards;
   opacity: 0;
@@ -643,7 +643,7 @@ const handleLogin = async () => {
 }
 
 .typing-text .cursor {
-  color: #667eea;
+  color: #3370FF;
   animation: blink 0.8s step-end infinite;
   font-weight: 300;
 }
@@ -673,70 +673,68 @@ const handleLogin = async () => {
   z-index: 1;
 }
 
-/* 输入框暗色主题 */
+/* 输入框飞书风格 */
 :deep(.el-input__wrapper) {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #F5F6F7 !important;
+  border: 1px solid transparent;
   box-shadow: none !important;
-  border-radius: 12px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
 :deep(.el-input__wrapper:hover) {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 15px rgba(102, 126, 234, 0.1) !important;
+  background: #F2F3F5 !important;
+  border-color: #C9CDD4;
+  box-shadow: none !important;
 }
 
 :deep(.el-input__wrapper.is-focus) {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: #667eea;
-  box-shadow:
-    0 0 20px rgba(102, 126, 234, 0.25),
-    0 0 40px rgba(102, 126, 234, 0.1) !important;
+  background: #FFFFFF !important;
+  border-color: #3370FF;
+  box-shadow: 0 0 0 2px rgba(51, 112, 255, 0.1) !important;
 }
 
 :deep(.el-input__inner) {
-  color: #ffffff;
+  color: #1F2329;
 }
 
 :deep(.el-input__inner::placeholder) {
-  color: rgba(255, 255, 255, 0.3);
+  color: #C9CDD4;
 }
 
 :deep(.el-input__prefix .el-icon) {
-  color: rgba(255, 255, 255, 0.4);
+  color: #8F959E;
 }
 
 :deep(.el-input__suffix .el-icon) {
-  color: rgba(255, 255, 255, 0.4);
+  color: #8F959E;
 }
 
 /* ===== 登录按钮 ===== */
 .login-button {
   width: 100%;
-  height: 48px;
+  height: 44px;
   border: none !important;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 6px;
-  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  background: #3370FF !important;
   position: relative;
   overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.35);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(51, 112, 255, 0.25);
 }
 
 .login-button:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    0 8px 30px rgba(102, 126, 234, 0.5),
-    0 0 60px rgba(102, 126, 234, 0.2);
+  transform: translateY(-1px);
+  background: #245BDB !important;
+  box-shadow: 0 4px 16px rgba(51, 112, 255, 0.35);
 }
 
 .login-button:active {
-  transform: translateY(-1px);
+  transform: translateY(0);
+  background: #1849BD !important;
 }
 
 /* 按钮流光 */
@@ -750,7 +748,7 @@ const handleLogin = async () => {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.25),
+    rgba(255, 255, 255, 0.15),
     transparent
   );
   animation: shimmer 3s ease-in-out infinite;
@@ -769,16 +767,16 @@ const handleLogin = async () => {
 }
 
 :deep(.el-link__inner) {
-  color: rgba(255, 255, 255, 0.4);
+  color: #8F959E;
   transition: all 0.3s ease;
 }
 
 :deep(.el-link:hover .el-link__inner) {
-  color: rgba(255, 255, 255, 0.85);
+  color: #3370FF;
 }
 
 :deep(.el-form-item__error) {
-  color: #f093fb;
+  color: #F53F3F;
 }
 
 /* ===== 响应式 ===== */

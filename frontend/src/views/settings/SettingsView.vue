@@ -341,14 +341,14 @@ onMounted(() => {
   width: 100px;
   height: 100px;
   font-size: 28px;
-  color: #909399;
+  color: #8F959E;
   text-align: center;
-  border: 1px dashed #c0c4cc;
+  border: 1px dashed #C9CDD4;
   border-radius: 8px;
 }
 
 .avatar-uploader .avatar-uploader-icon:hover {
-  border-color: #409eff;
+  border-color: #3370FF;
 }
 
 .tag-input {

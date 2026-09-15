@@ -91,16 +91,16 @@ export interface Image {
 }
 
 .image-item {
-  background: #ffffff;
+  background: #FFFFFF;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s, box-shadow 0.3s;
+  border: 1px solid #EBEDF0;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .image-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .image-wrapper {
@@ -131,6 +131,6 @@ export interface Image {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid #EBEDF0;
 }
 </style>

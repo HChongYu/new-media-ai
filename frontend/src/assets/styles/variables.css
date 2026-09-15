@@ -1,13 +1,21 @@
+/* 飞书风格色板 - CSS 自定义属性已在 global.css 中定义 */
+/* 此文件保留为 TypeScript 兼容的颜色常量引用 */
 export default {
-  primary: '#409eff',
-  success: '#67c23a',
-  warning: '#e6a23c',
-  danger: '#f56c6c',
-  info: '#909399',
-  text: '#303133',
-  regular: '#606266',
-  secondary: '#909399',
-  placeholder: '#c0c4cc',
-  bg: '#f5f7fa',
-  border: '#dcdfe6'
+  primary: '#3370FF',
+  primaryHover: '#245BDB',
+  primaryLight: '#EFF4FF',
+  success: '#00B365',
+  successLight: '#E8FFEA',
+  warning: '#FF7D00',
+  warningLight: '#FFF7E8',
+  danger: '#F53F3F',
+  dangerLight: '#FFECE8',
+  text: '#1F2329',
+  regular: '#4E5969',
+  secondary: '#8F959E',
+  placeholder: '#C9CDD4',
+  bg: '#F5F6F7',
+  bgWhite: '#FFFFFF',
+  border: '#DEE0E3',
+  borderLight: '#EBEDF0'
 }

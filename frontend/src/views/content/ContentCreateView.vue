@@ -216,20 +216,20 @@ onMounted(() => {
 }
 
 .active-topic {
-  background: #f0f9ff;
-  border: 1px solid #409eff;
+  background: #EFF4FF;
+  border: 1px solid #3370FF;
   border-radius: 6px;
 }
 
 .topic-title {
   font-weight: 500;
-  color: #303133;
+  color: #1F2329;
   margin-bottom: 4px;
 }
 
 .topic-desc {
   font-size: 12px;
-  color: #909399;
+  color: #8F959E;
 }
 
 .action-buttons {

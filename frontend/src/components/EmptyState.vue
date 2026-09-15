@@ -2,7 +2,7 @@
   <div class="empty-state">
     <div class="empty-icon">
       <slot name="icon">
-        <el-icon :size="64" color="#c0c4cc">
+        <el-icon :size="64" color="#C9CDD4">
           <Box />
         </el-icon>
       </slot>
@@ -36,7 +36,7 @@ defineProps<{
 
 .empty-text {
   font-size: 14px;
-  color: #909399;
+  color: #8F959E;
   margin-bottom: 20px;
 }
 

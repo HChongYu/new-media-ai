@@ -21,33 +21,34 @@ defineProps<{
 
 <style scoped>
 .card {
-  background: #ffffff;
+  background: #FFFFFF;
   border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  border: 1px solid #EBEDF0;
   overflow: hidden;
-  transition: box-shadow 0.3s;
+  transition: box-shadow 0.2s;
 }
 
 .card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .card-bordered {
-  border: 1px solid #e4e7ed;
+  border: 1px solid #DEE0E3;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 14px 20px;
+  border-bottom: 1px solid #EBEDF0;
 }
 
 .card-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-  color: #303133;
+  color: #1F2329;
 }
 
 .card-body {
