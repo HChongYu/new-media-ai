@@ -274,11 +274,11 @@ function handleCellClick(payload: { row: any; prop: string; value: any }) {
 }
 
 function viewTopic(id: number) {
-  router.push(`/topics/${id}`)
+  router.push(`/topic/detail/${id}`)
 }
 
 function editTopic(id: number) {
-  router.push(`/topics/${id}/edit`)
+  router.push(`/topic/edit/${id}`)
 }
 
 async function deleteTopic(id: number) {

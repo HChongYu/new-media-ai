@@ -26,10 +26,16 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '选题管理' }
       },
       {
-        path: 'topics/:id',
+        path: 'topic/detail/:id',
         name: 'TopicDetail',
         component: () => import('@views/topic/TopicDetailView.vue'),
         meta: { title: '选题详情' }
+      },
+      {
+        path: 'topic/edit/:id',
+        name: 'TopicEdit',
+        component: () => import('@views/topic/TopicEditView.vue'),
+        meta: { title: '编辑选题' }
       },
       {
         path: 'content',
@@ -44,7 +50,19 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '创建内容' }
       },
       {
-        path: 'content/:id/review',
+        path: 'content/detail/:id',
+        name: 'ContentDetail',
+        component: () => import('@views/content/ContentDetailView.vue'),
+        meta: { title: '内容详情' }
+      },
+      {
+        path: 'content/edit/:id',
+        name: 'ContentEdit',
+        component: () => import('@views/content/ContentEditView.vue'),
+        meta: { title: '编辑内容' }
+      },
+      {
+        path: 'content/review/:id',
         name: 'ContentReview',
         component: () => import('@views/content/ContentReviewView.vue'),
         meta: { title: '内容审核' }

@@ -11,7 +11,7 @@
     <div class="editor-toolbar">
       <el-button-group>
         <el-button size="small" @click="formatText('bold')">
-          <el-icon><Bold /></Bold></el-icon>
+          <el-icon><Bold /></el-icon>
         </el-button>
         <el-button size="small" @click="formatText('italic')">
           <el-icon><Italic /></el-icon>
@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Bold, Italic, Underline, Delete, ChatDotRound } from '@element-plus/icons-vue'
+import { Delete, ChatDotRound } from '@element-plus/icons-vue'
 
 const props = defineProps<{
   modelValue?: string

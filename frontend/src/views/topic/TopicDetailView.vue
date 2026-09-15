@@ -1,7 +1,7 @@
 <template>
   <div class="topic-detail">
     <BackButton />
-    <PageHeader :title="topic?.title || '选题详情'" :actions="pageActions" />
+    <PageHeader :title="topic?.title || '选题详情'" :actions="pageActions" @action="handleAction" />
     
     <el-row :gutter="20">
       <!-- 主要信息 -->
@@ -126,7 +126,7 @@ const fetchData = async () => {
 const handleAction = (action: any) => {
   switch (action.key) {
     case 'edit':
-      router.push(`/topics/${topicId.value}/edit`)
+      router.push(`/topic/edit/${topicId.value}`)
       break
     case 'generate-content':
       router.push(`/content/create?topicId=${topicId.value}`)

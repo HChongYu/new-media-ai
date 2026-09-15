@@ -1,4 +1,6 @@
+<script>
 import { defineComponent, h } from 'vue'
+import { useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 
 export default defineComponent({
@@ -15,12 +17,13 @@ export default defineComponent({
   },
   emits: ['click'],
   setup(props, { emit }) {
+    const router = useRouter()
     const handleClick = () => {
       emit('click')
       if (props.to === -1) {
         history.back()
       } else {
-        // TODO: 路由跳转
+        router.push(props.to)
       }
     }
 
@@ -38,3 +41,4 @@ export default defineComponent({
       )
   }
 })
+</script>

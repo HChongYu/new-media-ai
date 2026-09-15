@@ -1,191 +1,145 @@
 <template>
   <div class="publish-history">
     <PageHeader title="发布记录" />
-    
+
     <Card>
-      <!-- 筛选条件 -->
-      <div class="filter-bar">
-        <el-form :inline="true">
-          <el-form-item label="平台">
-            <el-select v-model="queryParams.platform" placeholder="请选择平台" clearable>
-              <el-option label="全部" value="" />
-              <el-option label="小红书" value="xiaohongshu" />
-              <el-option label="微信公众号" value="wechat" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="状态">
-            <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
-              <el-option label="全部" value="" />
-              <el-option label="待发布" value="pending" />
-              <el-option label="已发布" value="published" />
-              <el-option label="发布失败" value="failed" />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="fetchData">查询</el-button>
-            <el-button @click="resetFilter">重置</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-      
-      <!-- 发布记录列表 -->
-      <el-table
-        v-loading="loading"
-        :data="publishList"
-        style="width: 100%"
+      <DataList
+        ref="dataListRef"
+        :query-fields="queryFields"
+        :columns="columns"
+        :fetch-data="handleFetchData"
       >
-        <el-table-column prop="content_title" label="内容标题" min-width="200" />
-        <el-table-column prop="platform" label="发布平台" width="120">
-          <template #default="{ row }">
-            <el-tag :type="row.platform === 'xiaohongshu' ? 'primary' : 'success'">
-              {{ row.platform === 'xiaohongshu' ? '小红书' : '微信公众号' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <StatusBadge :status="row.status" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="post_url" label="发布链接" min-width="200">
-          <template #default="{ row }">
-            <el-link v-if="row.post_url" :href="row.post_url" target="_blank" type="primary">
-              查看原文
-            </el-link>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="published_at" label="发布时间" width="160">
-          <template #default="{ row }">
-            {{ row.published_at ? formatDate(row.published_at) : '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="created_at" label="创建时间" width="160">
-          <template #default="{ row }">
-            {{ formatDate(row.created_at) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
-          <template #default="{ row }">
-            <el-button v-if="row.post_url" type="primary" link @click="viewPost(row.post_url)">
-              查看
-            </el-button>
-            <el-button v-if="row.status === 'failed'" type="warning" link @click="retryPublish(row)">
-              重试
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      
-      <!-- 分页 -->
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :total="pagination.total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="fetchData"
-          @current-change="fetchData"
-        />
-      </div>
+        <!-- 发布链接列 -->
+        <template #post_url="{ row }">
+          <el-link v-if="row.post_url" :href="row.post_url" target="_blank" type="primary">
+            查看原文
+          </el-link>
+          <span v-else>-</span>
+        </template>
+
+        <!-- 操作列 -->
+        <template #actions="{ row }">
+          <el-button v-if="row.post_url" type="primary" link @click="viewPost(row.post_url)">
+            查看
+          </el-button>
+          <el-button v-if="row.status === 'failed'" type="warning" link @click="retryPublish(row)">
+            重试
+          </el-button>
+        </template>
+      </DataList>
     </Card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import PageHeader from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
-import StatusBadge from '@components/StatusBadge.vue'
+import { DataList } from '@components/data-driven'
+import type { FormField, TableColumn, DataListResult } from '@components/data-driven'
 import { publishApi } from '@services/api'
 
-const loading = ref(false)
-const publishList = ref([])
-const pagination = ref({
-  total: 0,
-  page: 1,
-  pageSize: 10
-})
+const dataListRef = ref()
 
-const queryParams = reactive({
-  platform: '',
-  status: ''
-})
+// ---- 查询字段配置 ----
+const queryFields: FormField[] = [
+  {
+    prop: 'platform',
+    label: '平台',
+    cellType: 'select',
+    span: 10,
+    dataSource: {
+      list: [
+        { label: '小红书', value: 'xiaohongshu' },
+        { label: '微信公众号', value: 'wechat' },
+      ],
+    },
+  },
+  {
+    prop: 'status',
+    label: '状态',
+    cellType: 'select',
+    span: 10,
+    dataSource: {
+      list: [
+        { label: '待发布', value: 'pending' },
+        { label: '已发布', value: 'published' },
+        { label: '发布失败', value: 'failed' },
+      ],
+    },
+  },
+]
 
-const fetchData = async () => {
-  loading.value = true
-  try {
-    const params: any = {
-      page: pagination.value.page,
-      pageSize: pagination.value.pageSize
-    }
-    
-    if (queryParams.platform) params.platform = queryParams.platform
-    if (queryParams.status) params.status = queryParams.status
-    
-    const result: any = await publishApi.history(params)
-    if (result?.data) {
-      publishList.value = result.data.list
-      pagination.value = result.data.pagination
-    }
-  } catch (error) {
-    console.error('Failed to fetch publish history:', error)
-  } finally {
-    loading.value = false
+// ---- 表格列配置 ----
+const columns: TableColumn[] = [
+  { prop: 'content_title', label: '内容标题', minWidth: 200 },
+  {
+    prop: 'platform',
+    label: '发布平台',
+    width: 120,
+    cellType: 'tag',
+    dataSource: {
+      list: [
+        { label: '小红书', value: 'xiaohongshu' },
+        { label: '微信公众号', value: 'wechat' },
+      ],
+    },
+  },
+  { prop: 'status', label: '状态', width: 100, cellType: 'status' },
+  { prop: 'post_url', label: '发布链接', minWidth: 200, slot: 'post_url' },
+  {
+    prop: 'published_at',
+    label: '发布时间',
+    width: 160,
+    formatter: (_row, _col, value) => (value ? formatDateTime(value) : '-'),
+  },
+  {
+    prop: 'created_at',
+    label: '创建时间',
+    width: 160,
+    sortable: true,
+    formatter: (_row, _col, value) => formatDateTime(value),
+  },
+  { prop: 'actions', label: '操作', width: 120, fixed: 'right', slot: 'actions' },
+]
+
+// ---- 日期格式化 ----
+function formatDateTime(value: string): string {
+  if (!value) return ''
+  const d = new Date(value)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+// ---- 数据加载回调 ----
+async function handleFetchData(params: Record<string, any>): Promise<DataListResult> {
+  const result: any = await publishApi.history(params)
+  return {
+    list: result?.data?.list || [],
+    total: result?.data?.pagination?.total || 0,
   }
 }
 
-const resetFilter = () => {
-  queryParams.platform = ''
-  queryParams.status = ''
-  fetchData()
-}
-
-const viewPost = (url: string) => {
+// ---- 表格事件 ----
+function viewPost(url: string) {
   window.open(url, '_blank')
 }
 
-const retryPublish = async (record: any) => {
+async function retryPublish(record: any) {
   try {
     await publishApi.create(record.content_id, record.platform)
     ElMessage.success('重新发布成功')
-    fetchData()
+    dataListRef.value?.refresh()
   } catch (error) {
     console.error('Failed to retry publish:', error)
     ElMessage.error('重新发布失败')
   }
 }
-
-const formatDate = (dateString: string) => {
-  if (!dateString) return '-'
-  return new Date(dateString).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-onMounted(() => {
-  fetchData()
-})
 </script>
 
 <style scoped>
 .publish-history {
   padding: 20px;
-}
-
-.filter-bar {
-  margin-bottom: 20px;
-}
-
-.pagination-container {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
 }
 </style>

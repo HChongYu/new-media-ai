@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue'
 
-const props = defineProps<{
+defineProps<{
   images: Image[]
   showDownload?: boolean
   showDelete?: boolean
@@ -67,9 +67,23 @@ const viewImage = (image: Image) => {
   emit('view', image)
 }
 
-const downloadImage = (image: Image) => {
-  // TODO: 实现下载逻辑
-  console.log('Download image:', image)
+const downloadImage = async (image: Image) => {
+  try {
+    const response = await fetch(image.image_url)
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `image-${image.id}.${blob.type.split('/')[1] || 'png'}`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Download failed:', error)
+    // 降级方案：直接打开图片
+    window.open(image.image_url, '_blank')
+  }
 }
 
 const deleteImage = (image: Image) => {

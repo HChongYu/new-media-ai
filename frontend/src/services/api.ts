@@ -7,7 +7,11 @@ export const authApi = {
   logout: () =>
     request.post('/auth/logout'),
   me: () =>
-    request.get('/auth/me')
+    request.get('/auth/me'),
+  updateProfile: (data: { email?: string; avatar?: string }) =>
+    request.put('/auth/profile', data),
+  changePassword: (data: { old_password: string; new_password: string }) =>
+    request.put('/auth/password', data)
 }
 
 // ========== 选题相关 ==========

@@ -161,7 +161,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import PageHeader from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
-import { settingsApi } from '@services/api'
+import { settingsApi, authApi } from '@services/api'
 import { useUserStore } from '@stores/user'
 
 const userStore = useUserStore()
@@ -169,6 +169,7 @@ const userStore = useUserStore()
 const activeTab = ref('account')
 const xiaohongshuTagInputVisible = ref(false)
 const xiaohongshuTagInputValue = ref('')
+const xiaohongshuTagInput = ref()
 
 const userForm = ref({
   username: '',
@@ -236,7 +237,18 @@ const fetchData = async () => {
 
 const updateAccount = async () => {
   try {
-    // TODO: 调用更新账号信息 API
+    await authApi.updateProfile({
+      email: userForm.value.email,
+      avatar: userForm.value.avatar
+    })
+    // 同步更新 userStore 中的用户信息
+    if (userStore.user) {
+      userStore.setUser({
+        ...userStore.user,
+        email: userForm.value.email,
+        avatar: userForm.value.avatar
+      })
+    }
     ElMessage.success('账号信息更新成功')
   } catch (error) {
     console.error('Failed to update account:', error)
@@ -250,7 +262,10 @@ const updatePassword = async () => {
   }
   
   try {
-    // TODO: 调用修改密码 API
+    await authApi.changePassword({
+      old_password: passwordForm.value.old_password,
+      new_password: passwordForm.value.new_password
+    })
     ElMessage.success('密码修改成功')
     passwordForm.value = { old_password: '', new_password: '', confirm_password: '' }
   } catch (error) {
@@ -304,7 +319,7 @@ const handleAvatarSuccess = (response: any) => {
 const showTagInput = (platform: string) => {
   xiaohongshuTagInputVisible.value = true
   setTimeout(() => {
-    // TODO: 聚焦输入框
+    xiaohongshuTagInput.value?.focus()
   }, 10)
 }
 

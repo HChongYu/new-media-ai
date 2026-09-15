@@ -2,7 +2,7 @@
   <div class="content-create">
     <BackButton />
     <PageHeader title="创建内容" />
-    
+
     <el-row :gutter="20">
       <!-- 左侧：选题选择 -->
       <el-col :span="8">
@@ -33,7 +33,7 @@
             </el-list-item>
           </el-list>
         </Card>
-        
+
         <Card title="内容设置" style="margin-top: 20px;">
           <el-form :model="contentForm" label-width="80px">
             <el-form-item label="内容类型">
@@ -42,14 +42,14 @@
                 <el-radio value="image">图片</el-radio>
               </el-radio-group>
             </el-form-item>
-            
+
             <el-form-item label="发布平台">
               <el-checkbox-group v-model="contentForm.platforms">
                 <el-checkbox value="xiaohongshu">小红书</el-checkbox>
                 <el-checkbox value="wechat">微信公众号</el-checkbox>
               </el-checkbox-group>
             </el-form-item>
-            
+
             <el-form-item label="内容风格">
               <el-select v-model="contentForm.tone" placeholder="请选择风格">
                 <el-option label="专业严谨" value="professional" />
@@ -57,7 +57,7 @@
                 <el-option label="热情洋溢" value="enthusiastic" />
               </el-select>
             </el-form-item>
-            
+
             <el-form-item label="内容长度">
               <el-select v-model="contentForm.length" placeholder="请选择长度">
                 <el-option label="短篇 (500字以内)" value="short" />
@@ -66,7 +66,7 @@
               </el-select>
             </el-form-item>
           </el-form>
-          
+
           <el-button
             type="primary"
             style="width: 100%; margin-top: 20px;"
@@ -77,7 +77,7 @@
           </el-button>
         </Card>
       </el-col>
-      
+
       <!-- 右侧：内容编辑 -->
       <el-col :span="16">
         <Card title="内容编辑">
@@ -87,10 +87,10 @@
             :show-preview="true"
           />
         </Card>
-        
+
         <div class="action-buttons" style="margin-top: 20px;">
-          <el-button @click="saveDraft">保存草稿</el-button>
-          <el-button type="primary" @click="submitForReview">提交审核</el-button>
+          <el-button :loading="saving" @click="saveDraft">保存草稿</el-button>
+          <el-button type="primary" :loading="submitting" @click="submitForReview">提交审核</el-button>
         </div>
       </el-col>
     </el-row>
@@ -113,6 +113,8 @@ const topicSearch = ref('')
 const topics = ref([])
 const selectedTopic = ref<any>(null)
 const generating = ref(false)
+const saving = ref(false)
+const submitting = ref(false)
 
 const contentForm = reactive({
   topic_id: 0,
@@ -168,12 +170,13 @@ const getTopicStatusType = (status: string) => {
   return typeMap[status] || 'info'
 }
 
+// ---- AI 生成内容 ----
 const generateContent = async () => {
   if (!selectedTopic.value) {
     ElMessage.warning('请先选择一个选题')
     return
   }
-  
+
   generating.value = true
   try {
     const params = {
@@ -195,14 +198,74 @@ const generateContent = async () => {
   }
 }
 
-const saveDraft = () => {
-  // TODO: 实现保存草稿逻辑
-  ElMessage.success('草稿保存成功')
+// ---- 保存草稿 ----
+const saveDraft = async () => {
+  if (!contentForm.title) {
+    ElMessage.warning('请输入内容标题')
+    return
+  }
+  if (!contentForm.content_text) {
+    ElMessage.warning('请输入内容正文')
+    return
+  }
+
+  saving.value = true
+  try {
+    await contentApi.create({
+      topic_id: contentForm.topic_id,
+      title: contentForm.title,
+      content_text: contentForm.content_text,
+      content_type: contentForm.content_type,
+      platform: contentForm.platforms[0],
+    })
+    ElMessage.success('草稿保存成功')
+    router.push('/content')
+  } catch (error) {
+    console.error('Failed to save draft:', error)
+    ElMessage.error('保存草稿失败')
+  } finally {
+    saving.value = false
+  }
 }
 
-const submitForReview = () => {
-  // TODO: 实现提交审核逻辑
-  ElMessage.success('已提交审核')
+// ---- 提交审核 ----
+const submitForReview = async () => {
+  if (!contentForm.title) {
+    ElMessage.warning('请输入内容标题')
+    return
+  }
+  if (!contentForm.content_text) {
+    ElMessage.warning('请输入内容正文')
+    return
+  }
+
+  submitting.value = true
+  try {
+    // 先创建内容
+    const result: any = await contentApi.create({
+      topic_id: contentForm.topic_id,
+      title: contentForm.title,
+      content_text: contentForm.content_text,
+      content_type: contentForm.content_type,
+      platform: contentForm.platforms[0],
+    })
+
+    const contentId = result?.data?.id
+    if (contentId) {
+      // 提交审核
+      await contentApi.review(contentId, {
+        status: 'approved',
+        review_note: ''
+      })
+    }
+    ElMessage.success('已提交审核')
+    router.push('/content')
+  } catch (error) {
+    console.error('Failed to submit for review:', error)
+    ElMessage.error('提交审核失败')
+  } finally {
+    submitting.value = false
+  }
 }
 
 onMounted(() => {
