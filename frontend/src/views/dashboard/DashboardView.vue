@@ -18,9 +18,9 @@
     <template v-else>
       <div v-loading="loading">
         <el-row :gutter="20">
-          <!-- 统计卡片 -->
+          <!-- 统计卡片：点击跳转对应列表页 -->
           <el-col :span="6">
-            <el-card class="stat-card">
+            <el-card class="stat-card" @click="router.push('/topics')">
               <div class="stat-content">
                 <div class="stat-icon" style="background: #3370FF;">
                   <el-icon :size="32" color="#ffffff"><Document /></el-icon>
@@ -34,7 +34,7 @@
           </el-col>
 
           <el-col :span="6">
-            <el-card class="stat-card">
+            <el-card class="stat-card" @click="router.push('/content')">
               <div class="stat-content">
                 <div class="stat-icon" style="background: #00B365;">
                   <el-icon :size="32" color="#ffffff"><Edit /></el-icon>
@@ -48,7 +48,7 @@
           </el-col>
 
           <el-col :span="6">
-            <el-card class="stat-card">
+            <el-card class="stat-card" @click="router.push('/images')">
               <div class="stat-content">
                 <div class="stat-icon" style="background: #FF7D00;">
                   <el-icon :size="32" color="#ffffff"><Picture /></el-icon>
@@ -62,7 +62,7 @@
           </el-col>
 
           <el-col :span="6">
-            <el-card class="stat-card">
+            <el-card class="stat-card" @click="router.push('/publish')">
               <div class="stat-content">
                 <div class="stat-icon" style="background: #F53F3F;">
                   <el-icon :size="32" color="#ffffff"><Share /></el-icon>
@@ -89,6 +89,7 @@
                   v-for="activity in stats.recent_activities"
                   :key="`${activity.type}-${activity.ref_id}`"
                   class="activity-item"
+                  @click="handleActivityClick(activity)"
                 >
                   <div class="activity-icon" :class="`activity-${activity.type}`">
                     <el-icon :size="20">
@@ -140,7 +141,7 @@ import Card from '@components/Card.vue'
 import PageHeader from '@components/PageHeader.vue'
 import EmptyState from '@components/EmptyState.vue'
 import { dashboardApi } from '@services/api'
-import type { DashboardStats, ActivityType } from '@services/api'
+import type { DashboardStats, DashboardActivity, ActivityType } from '@services/api'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -196,6 +197,24 @@ const getActivityIcon = (type: ActivityType) => {
 
 const formatActivityTime = (time: string) => dayjs(time).fromNow()
 
+// 最近活动：按活动类型跳转；图片/发布记录无独立详情页，回退到对应列表页
+const handleActivityClick = (activity: DashboardActivity) => {
+  switch (activity.type) {
+    case 'topic':
+      router.push(`/topic/detail/${activity.ref_id}`)
+      break
+    case 'content':
+      router.push(`/content/detail/${activity.ref_id}`)
+      break
+    case 'image':
+      router.push('/images')
+      break
+    case 'publish':
+      router.push('/publish')
+      break
+  }
+}
+
 const handleAction = (action: { key: string }) => {
   switch (action.key) {
     case 'new-topic':
@@ -221,6 +240,13 @@ onMounted(() => {
 <style scoped>
 .stat-card {
   margin-bottom: 20px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(31, 35, 41, 0.12);
 }
 
 .error-card {
@@ -272,11 +298,13 @@ onMounted(() => {
   padding: 10px 12px;
   background: #F5F6F7;
   border-radius: 8px;
-  transition: background 0.2s;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
 }
 
 .activity-item:hover {
-  background: #F2F3F5;
+  background: #E8EAED;
+  transform: translateX(2px);
 }
 
 .activity-icon {
