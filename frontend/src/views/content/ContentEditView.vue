@@ -69,7 +69,7 @@ async function saveContent() {
       content_text: contentForm.content_text,
     })
     ElMessage.success('保存成功')
-    router.push(`/content/detail/${contentId.value}`)
+    router.push(`/content/detail/${contentId.value}?step=content`)
   } catch (error) {
     console.error('Failed to save content:', error)
     ElMessage.error('保存失败')

@@ -20,6 +20,10 @@ from app.schemas.content import (
 )
 from app.schemas.image import ImageResponse, ImageGenerateRequest
 from app.schemas.common import ResponseModel
+from app.services.publish_service import (
+    SUPPORTED_PLATFORMS,
+    publish_to_platform,
+)
 
 router = APIRouter()
 
@@ -82,6 +86,7 @@ def list_contents(
                 created_by_name=creator.username if creator else None,
                 reviewed_by=item.reviewed_by,
                 reviewed_by_name=reviewer.username if reviewer else None,
+                review_note=item.review_note,
                 created_at=item.created_at.isoformat(),
                 reviewed_at=item.reviewed_at.isoformat() if item.reviewed_at else None,
                 published_at=item.published_at.isoformat() if item.published_at else None,
@@ -128,6 +133,7 @@ def get_content(
             created_by_name=creator.username if creator else None,
             reviewed_by=content.reviewed_by,
             reviewed_by_name=reviewer.username if reviewer else None,
+            review_note=content.review_note,
             created_at=content.created_at.isoformat(),
             reviewed_at=content.reviewed_at.isoformat() if content.reviewed_at else None,
             published_at=content.published_at.isoformat() if content.published_at else None,
@@ -213,6 +219,7 @@ def update_content(
             status=content.status,
             created_by=content.created_by,
             created_by_name=creator.username if creator else None,
+            review_note=content.review_note,
             created_at=content.created_at.isoformat(),
             reviewed_at=content.reviewed_at.isoformat() if content.reviewed_at else None,
             published_at=content.published_at.isoformat() if content.published_at else None,
@@ -258,6 +265,7 @@ def review_content(
             created_by_name=creator.username if creator else None,
             reviewed_by=content.reviewed_by,
             reviewed_by_name=reviewer.username if reviewer else None,
+            review_note=content.review_note,
             created_at=content.created_at.isoformat(),
             reviewed_at=content.reviewed_at.isoformat() if content.reviewed_at else None,
             published_at=content.published_at.isoformat() if content.published_at else None,
@@ -385,7 +393,7 @@ async def publish_content(
     from app.models.publish_record import PublishRecord
     from app.schemas.publish import PublishResponse
 
-    if platform not in ("xiaohongshu", "wechat"):
+    if platform not in SUPPORTED_PLATFORMS:
         raise HTTPException(status_code=400, detail="不支持的平台")
 
     content = db.query(Content).filter(Content.id == content_id).first()
@@ -404,10 +412,15 @@ async def publish_content(
     db.flush()
 
     try:
-        # TODO: 对接小红书/微信公众号 API
+        post_url = await publish_to_platform(
+            platform=platform,
+            title=content.title,
+            content=content.content_text or "",
+        )
+
         record.status = "published"
         record.published_at = datetime.now()
-        record.post_url = f"https://{'www.xiaohongshu.com' if platform == 'xiaohongshu' else 'mp.weixin.qq.com'}/post/{record.id}"
+        record.post_url = post_url  # 模拟模式 / 微信异步发布时为 None
 
         content.status = "published"
         content.published_at = datetime.now()
@@ -428,6 +441,7 @@ async def publish_content(
             )
         )
     except Exception as e:
+        # PublishError 等所有发布异常统一落库为失败记录
         record.status = "failed"
         record.error_message = str(e)
         db.commit()

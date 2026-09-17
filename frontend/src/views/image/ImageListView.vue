@@ -18,6 +18,7 @@
             :preview-src-list="[row.image_url]"
             preview-teleported
             fit="cover"
+            lazy
             style="width: 80px; height: 80px; border-radius: 4px;"
           />
         </template>
@@ -33,13 +34,21 @@
     <!-- 批量生成图片对话框 -->
     <el-dialog v-model="batchGenerateDialog.visible" title="批量生成图片" width="500px">
       <el-form :model="batchGenerateDialog.form" label-width="100px">
-        <el-form-item label="内容ID" required>
-          <el-input-number
+        <el-form-item label="关联内容" required>
+          <el-select
             v-model="batchGenerateDialog.form.content_id"
-            :min="1"
-            placeholder="请输入内容ID"
+            placeholder="请选择要配图的内容"
+            filterable
             style="width: 100%;"
-          />
+          >
+            <el-option
+              v-for="item in contentOptions"
+              :key="item.id"
+              :label="item.title"
+              :value="item.id"
+            />
+          </el-select>
+          <div class="form-tip">提示：也可以在「内容工作台」中为指定内容直接配图，流程更顺畅</div>
         </el-form-item>
         <el-form-item label="图片类型">
           <el-checkbox-group v-model="batchGenerateDialog.form.image_types">
@@ -78,9 +87,20 @@ import type { PageAction } from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
 import { DataList } from '@components/data-driven'
 import type { FormField, TableColumn, DataListResult } from '@components/data-driven'
-import { imageApi } from '@services/api'
+import { imageApi, contentApi } from '@services/api'
 
 const dataListRef = ref()
+const contentOptions = ref<any[]>([])
+
+// ---- 拉取内容选项（替代手输内容 ID）----
+async function fetchContentOptions() {
+  try {
+    const result: any = await contentApi.list({ page: 1, page_size: 100 })
+    contentOptions.value = result?.data?.items || []
+  } catch (error) {
+    console.error('Failed to fetch content options:', error)
+  }
+}
 
 // ---- 查询字段配置 ----
 const queryFields: FormField[] = [
@@ -149,10 +169,13 @@ function formatDateTime(value: string): string {
 
 // ---- 数据加载回调 ----
 async function handleFetchData(params: Record<string, any>): Promise<DataListResult> {
-  const result: any = await imageApi.list(params)
+  const result: any = await imageApi.list({
+    ...params,
+    page_size: params.pageSize,
+  })
   return {
-    list: result?.data?.list || [],
-    total: result?.data?.pagination?.total || 0,
+    list: result?.data?.items || [],
+    total: result?.data?.total || 0,
   }
 }
 
@@ -169,22 +192,27 @@ const batchGenerateDialog = reactive({
 })
 
 // ---- 页头按钮事件 ----
-function handlePageAction(action: PageAction) {
+async function handlePageAction(action: PageAction) {
   if (action.key === 'batch-generate') {
     batchGenerateDialog.form = {
       content_id: null,
-      image_types: ['cover'],
+      image_types: ['cover', 'section', 'summary'],
       count: 3,
       style: 'professional'
     }
     batchGenerateDialog.visible = true
+    fetchContentOptions()
   }
 }
 
 // ---- 确认批量生成 ----
 async function confirmBatchGenerate() {
   if (!batchGenerateDialog.form.content_id) {
-    ElMessage.warning('请输入内容ID')
+    ElMessage.warning('请选择要配图的内容')
+    return
+  }
+  if (batchGenerateDialog.form.image_types.length === 0) {
+    ElMessage.warning('请至少选择一种图片类型')
     return
   }
 
@@ -229,5 +257,12 @@ async function deleteImage(image: any) {
 <style scoped>
 .image-list {
   padding: 20px;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: #8F959E;
+  line-height: 1.6;
+  margin-top: 4px;
 }
 </style>

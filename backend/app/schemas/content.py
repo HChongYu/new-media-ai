@@ -40,6 +40,7 @@ class ContentResponse(BaseModel):
     created_by_name: str | None = None
     reviewed_by: int | None = None
     reviewed_by_name: str | None = None
+    review_note: str | None = None
     created_at: str
     reviewed_at: str | None = None
     published_at: str | None = None

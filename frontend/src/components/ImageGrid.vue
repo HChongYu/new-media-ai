@@ -2,7 +2,7 @@
   <div class="image-grid">
     <div v-for="image in images" :key="image.id" class="image-item">
       <div class="image-wrapper">
-        <img :src="image.image_url" :alt="image.image_type" @click="viewImage(image)" />
+        <img :src="image.image_url" :alt="image.image_type" loading="lazy" @click="viewImage(image)" />
         <div class="image-overlay">
           <el-tag size="small" :type="getImageTypeColor(image.image_type)">
             {{ getImageTypeText(image.image_type) }}

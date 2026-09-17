@@ -11,16 +11,22 @@
       >
         <!-- 内容标题列：可点击跳转 -->
         <template #title="{ row }">
-          <el-link type="primary" @click="viewContent(row.id)">
+          <el-link type="primary" @click="openWorkspace(row.id)">
             {{ row.title }}
           </el-link>
         </template>
 
-        <!-- 操作列 -->
+        <!-- 操作列：根据状态给出下一步主动作，统一进入内容工作台 -->
         <template #actions="{ row }">
-          <el-button type="primary" link @click="viewContent(row.id)">查看</el-button>
-          <el-button v-if="row.status === 'draft'" type="primary" link @click="editContent(row.id)">编辑</el-button>
-          <el-button v-if="row.status === 'approved'" type="success" link @click="reviewContent(row.id)">审核</el-button>
+          <el-button type="primary" link @click="openWorkspace(row.id)">查看</el-button>
+          <el-button
+            v-if="getNextAction(row.status)"
+            :type="getNextAction(row.status)!.type"
+            link
+            @click="openWorkspace(row.id, getNextAction(row.status)!.step)"
+          >
+            {{ getNextAction(row.status)!.label }}
+          </el-button>
           <el-button type="danger" link @click="deleteContent(row.id)">删除</el-button>
         </template>
       </DataList>
@@ -107,6 +113,7 @@ const queryFields: FormField[] = [
         { label: '草稿', value: 'draft' },
         { label: '审核中', value: 'reviewing' },
         { label: '已通过', value: 'approved' },
+        { label: '已驳回', value: 'rejected' },
         { label: '已发布', value: 'published' },
       ],
     },
@@ -158,7 +165,7 @@ const columns: TableColumn[] = [
     sortable: true,
     formatter: (_row, _col, value) => formatDateTime(value),
   },
-  { prop: 'actions', label: '操作', width: 180, fixed: 'right', slot: 'actions' },
+  { prop: 'actions', label: '操作', width: 200, fixed: 'right', slot: 'actions' },
 ]
 
 // ---- 页头操作按钮 ----
@@ -177,10 +184,13 @@ function formatDateTime(value: string): string {
 
 // ---- 数据加载回调 ----
 async function handleFetchData(params: Record<string, any>): Promise<DataListResult> {
-  const result: any = await contentApi.list(params)
+  const result: any = await contentApi.list({
+    ...params,
+    page_size: params.pageSize,
+  })
   return {
-    list: result?.data?.list || [],
-    total: result?.data?.pagination?.total || 0,
+    list: result?.data?.items || [],
+    total: result?.data?.total || 0,
   }
 }
 
@@ -218,8 +228,8 @@ function handlePageAction(action: PageAction) {
 // ---- 获取选题列表（批量生成用） ----
 async function fetchTopicsForBatch() {
   try {
-    const result: any = await topicApi.list({ page: 1, pageSize: 100 })
-    batchTopics.value = result?.data?.list || result?.data?.items || []
+    const result: any = await topicApi.list({ page: 1, page_size: 100 })
+    batchTopics.value = result?.data?.items || []
   } catch (error) {
     console.error('Failed to fetch topics for batch:', error)
   }
@@ -234,14 +244,16 @@ async function confirmBatchGenerate() {
 
   batchGenerateDialog.loading = true
   try {
-    await contentApi.generate(batchGenerateDialog.form.topic_id, {
+    const result: any = await contentApi.generate(batchGenerateDialog.form.topic_id, {
       platform: batchGenerateDialog.form.platform as any,
       tone: batchGenerateDialog.form.tone as any,
       length: batchGenerateDialog.form.length as any
     })
-    ElMessage.success('内容生成成功')
+    const newId = result?.data?.id
     batchGenerateDialog.visible = false
-    dataListRef.value?.refresh()
+    ElMessage.success('内容生成成功，已进入工作台')
+    // 生成即进入工作台配图环节，不再把用户丢回列表
+    router.push(newId ? `/content/detail/${newId}?step=image` : '/content')
   } catch (error) {
     console.error('批量生成内容失败:', error)
   } finally {
@@ -250,16 +262,25 @@ async function confirmBatchGenerate() {
 }
 
 // ---- 表格事件 ----
-function viewContent(id: number) {
-  router.push(`/content/detail/${id}`)
+/** 按内容状态给出「下一步」主动作，全部汇入内容工作台 */
+function getNextAction(status: string): { label: string; type: string; step: string } | null {
+  switch (status) {
+    case 'draft':
+    case 'rejected':
+      return { label: '继续完善', type: 'primary', step: 'content' }
+    case 'reviewing':
+      return { label: '去审核', type: 'warning', step: 'review' }
+    case 'approved':
+      return { label: '去发布', type: 'success', step: 'publish' }
+    case 'published':
+      return { label: '发布详情', type: 'success', step: 'publish' }
+    default:
+      return null
+  }
 }
 
-function editContent(id: number) {
-  router.push(`/content/edit/${id}`)
-}
-
-function reviewContent(id: number) {
-  router.push(`/content/review/${id}`)
+function openWorkspace(id: number, step?: string) {
+  router.push(step ? `/content/detail/${id}?step=${step}` : `/content/detail/${id}`)
 }
 
 async function deleteContent(id: number) {

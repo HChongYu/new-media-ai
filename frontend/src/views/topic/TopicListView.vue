@@ -20,6 +20,7 @@
         <!-- 操作列 -->
         <template #actions="{ row }">
           <el-button type="primary" link @click="viewTopic(row.id)">查看</el-button>
+          <el-button type="success" link @click="generateContent(row.id)">写文章</el-button>
           <el-button type="primary" link @click="editTopic(row.id)">编辑</el-button>
           <el-button type="danger" link @click="deleteTopic(row.id)">删除</el-button>
         </template>
@@ -114,7 +115,7 @@ const columns: TableColumn[] = [
     sortable: true,
     formatter: (_row, _col, value) => formatDateTime(value),
   },
-  { prop: 'actions', label: '操作', width: 160, fixed: 'right', slot: 'actions' },
+  { prop: 'actions', label: '操作', width: 220, fixed: 'right', slot: 'actions' },
 ]
 
 // ---- 页头操作按钮 ----
@@ -200,10 +201,13 @@ const createFields: FormField[] = [
 
 // ---- 数据加载回调 ----
 async function handleFetchData(params: Record<string, any>): Promise<DataListResult> {
-  const result: any = await topicApi.list(params)
+  const result: any = await topicApi.list({
+    ...params,
+    page_size: params.pageSize,
+  })
   return {
     list: result?.data?.items || [],
-    total: result?.data?.pagination?.total || 0,
+    total: result?.data?.total || 0,
   }
 }
 
@@ -275,6 +279,11 @@ function handleCellClick(payload: { row: any; prop: string; value: any }) {
 
 function viewTopic(id: number) {
   router.push(`/topic/detail/${id}`)
+}
+
+/** 基于该选题跳转创建内容页，AI 生成文章（topicId 用于自动预选） */
+function generateContent(id: number) {
+  router.push(`/content/create?topicId=${id}`)
 }
 
 function editTopic(id: number) {

@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import engine, Base
-from app.routers import auth, topics, contents, images, publish, settings as settings_router
+from app.routers import auth, topics, contents, images, publish, settings as settings_router, dashboard
 
 
 @asynccontextmanager
@@ -59,6 +59,7 @@ app.include_router(contents.router, prefix="/api/contents", tags=["内容"])
 app.include_router(images.router, prefix="/api/images", tags=["图片"])
 app.include_router(publish.router, prefix="/api/publish", tags=["发布"])
 app.include_router(settings_router.router, prefix="/api/settings", tags=["设置"])
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["仪表盘"])
 
 
 @app.get("/api/health")

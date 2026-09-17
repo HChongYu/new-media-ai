@@ -6,6 +6,7 @@
         placeholder="输入标题..."
         size="large"
         clearable
+        @input="handleTitleInput"
       />
     </div>
     <div class="editor-toolbar">
@@ -56,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { Delete, ChatDotRound } from '@element-plus/icons-vue'
 
 const props = defineProps<{
@@ -73,6 +74,27 @@ const emit = defineEmits<{
 const editorRef = ref<HTMLTextAreaElement | null>(null)
 const title = ref(props.titleValue || '')
 const content = ref(props.modelValue || '')
+
+// 外部数据变化时同步到编辑器内部：
+// 1) 创建页 AI 生成完成后父组件回填 2) 编辑页详情接口异步返回后回显
+// 仅在内外值不一致时同步，避免输入时反复赋值导致光标跳动
+watch(
+  () => props.modelValue,
+  (val) => {
+    if (val !== content.value) {
+      content.value = val || ''
+    }
+  }
+)
+
+watch(
+  () => props.titleValue,
+  (val) => {
+    if (val !== title.value) {
+      title.value = val || ''
+    }
+  }
+)
 
 const wordCount = computed(() => {
   return content.value.replace(/\s/g, '').length
@@ -106,6 +128,9 @@ onMounted(() => {
 
 const handleInput = () => {
   emit('update:modelValue', content.value)
+}
+
+const handleTitleInput = () => {
   emit('update:titleValue', title.value)
 }
 

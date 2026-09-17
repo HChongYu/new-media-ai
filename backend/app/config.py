@@ -23,10 +23,25 @@ class Settings(BaseSettings):
     LLM_API_BASE: str = ""  # 本地模型或代理地址
 
     # 图片生成
-    IMAGE_PROVIDER: str = "mock"  # openai / local / mock
+    IMAGE_PROVIDER: str = "mock"  # sensenova / openai / local / mock
+    SD_WEBUI_URL: str = "http://127.0.0.1:7860"  # 本地 Stable Diffusion WebUI 地址
+
+    # 商汤 SenseNova 文生图（provider=sensenova 时生效）
+    IMAGE_MODEL: str = "sensenova-u1-fast"
+    IMAGE_API_BASE: str = ""  # 留空则复用 LLM_API_BASE
+    IMAGE_API_KEY: str = ""  # 留空则复用 LLM_API_KEY
+    IMAGE_WATERMARK: bool = True  # 是否带官方水印（官方建议显式传参）
 
     # 文件上传
     UPLOAD_DIR: str = "uploads"
+
+    # 内容发布
+    PUBLISH_MODE: str = "simulate"  # simulate（开发模拟）/ live（对接真实平台 API）
+    # 微信公众号（live 模式下必填，在公众号后台「设置与开发」中获取）
+    WECHAT_APPID: str = ""
+    WECHAT_APPSECRET: str = ""
+    # IP 白名单不生效时可使用中控服务获取的稳定 access_token（可选）
+    WECHAT_ACCESS_TOKEN_URL: str = ""
 
     # CORS
     CORS_ORIGINS: list[str] = [

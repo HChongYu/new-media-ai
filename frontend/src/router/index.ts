@@ -62,10 +62,9 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '编辑内容' }
       },
       {
+        // 审核已并入「内容工作台」，旧链接统一重定向到工作台审核环节
         path: 'content/review/:id',
-        name: 'ContentReview',
-        component: () => import('@views/content/ContentReviewView.vue'),
-        meta: { title: '内容审核' }
+        redirect: (to) => `/content/detail/${to.params.id}?step=review`
       },
       {
         path: 'images',

@@ -9,6 +9,13 @@
         :columns="columns"
         :fetch-data="handleFetchData"
       >
+        <!-- 内容标题列：点击进入内容工作台发布环节 -->
+        <template #content_title="{ row }">
+          <el-link type="primary" @click="openWorkspace(row.content_id)">
+            {{ row.content_title }}
+          </el-link>
+        </template>
+
         <!-- 发布链接列 -->
         <template #post_url="{ row }">
           <el-link v-if="row.post_url" :href="row.post_url" target="_blank" type="primary">
@@ -33,6 +40,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import PageHeader from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
@@ -40,7 +48,12 @@ import { DataList } from '@components/data-driven'
 import type { FormField, TableColumn, DataListResult } from '@components/data-driven'
 import { publishApi } from '@services/api'
 
+const router = useRouter()
 const dataListRef = ref()
+
+function openWorkspace(contentId: number) {
+  router.push(`/content/detail/${contentId}?step=publish`)
+}
 
 // ---- 查询字段配置 ----
 const queryFields: FormField[] = [
@@ -73,7 +86,7 @@ const queryFields: FormField[] = [
 
 // ---- 表格列配置 ----
 const columns: TableColumn[] = [
-  { prop: 'content_title', label: '内容标题', minWidth: 200 },
+  { prop: 'content_title', label: '内容标题', minWidth: 200, slot: 'content_title' },
   {
     prop: 'platform',
     label: '发布平台',
@@ -114,10 +127,13 @@ function formatDateTime(value: string): string {
 
 // ---- 数据加载回调 ----
 async function handleFetchData(params: Record<string, any>): Promise<DataListResult> {
-  const result: any = await publishApi.history(params)
+  const result: any = await publishApi.history({
+    ...params,
+    page_size: params.pageSize,
+  })
   return {
-    list: result?.data?.list || [],
-    total: result?.data?.pagination?.total || 0,
+    list: result?.data?.items || [],
+    total: result?.data?.total || 0,
   }
 }
 

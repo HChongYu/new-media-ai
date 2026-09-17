@@ -78,6 +78,12 @@ export const settingsApi = {
     request.put('/settings', data)
 }
 
+// ========== 仪表盘相关 ==========
+export const dashboardApi = {
+  stats: () =>
+    request.get('/dashboard/stats')
+}
+
 // ========== 类型定义 ==========
 export interface User {
   id: number
@@ -110,6 +116,7 @@ export interface Topic {
 export interface TopicQueryParams {
   page?: number
   pageSize?: number
+  page_size?: number
   status?: string
   keyword?: string
   start_date?: string
@@ -160,8 +167,10 @@ export interface Content {
 export interface ContentQueryParams {
   page?: number
   pageSize?: number
+  page_size?: number
   status?: string
   content_type?: string
+  topic_id?: number
   keyword?: string
   start_date?: string
   end_date?: string
@@ -207,6 +216,7 @@ export interface Image {
 export interface ImageQueryParams {
   page?: number
   pageSize?: number
+  page_size?: number
   content_id?: number
   image_type?: string
   start_date?: string
@@ -236,6 +246,7 @@ export interface PublishRecord {
 export interface PublishQueryParams {
   page?: number
   pageSize?: number
+  page_size?: number
   platform?: string
   status?: string
   start_date?: string
@@ -262,4 +273,21 @@ export interface SettingsUpdateParams {
   llm_model?: string
   image_style?: string
   platform_settings?: Record<string, unknown>
+}
+
+export type ActivityType = 'topic' | 'content' | 'image' | 'publish'
+
+export interface DashboardActivity {
+  type: ActivityType
+  ref_id: number
+  title: string
+  time: string
+}
+
+export interface DashboardStats {
+  total_topics: number
+  total_contents: number
+  total_images: number
+  published_count: number
+  recent_activities: DashboardActivity[]
 }
