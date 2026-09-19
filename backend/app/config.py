@@ -11,6 +11,12 @@ class Settings(BaseSettings):
     # SQLite (开发用): sqlite:///./op_ai.db
     DATABASE_URL: str = "sqlite:///./op_ai.db"
 
+    # LangGraph Checkpointer 连接（留空时自动跟随 DATABASE_URL）
+    # - PostgreSQL：直接使用 postgresql://user:password@host:5432/db
+    # - SQLite 开发环境：默认使用独立文件 langgraph_checkpoints.db
+    #   也可显式指定文件路径或 sqlite:///./xxx.db
+    LANGGRAPH_DB_URL: str = ""
+
     # JWT
     SECRET_KEY: str = "your-secret-key-change-in-production"
     ALGORITHM: str = "HS256"

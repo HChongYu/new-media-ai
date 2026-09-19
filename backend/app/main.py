@@ -7,7 +7,17 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import engine, Base
-from app.routers import auth, topics, contents, images, publish, settings as settings_router, dashboard
+from app.routers import (
+    auth,
+    topics,
+    contents,
+    images,
+    workflows,
+    publish,
+    settings as settings_router,
+    dashboard,
+)
+from app.graph.workflow import init_workflow, shutdown_workflow
 
 
 @asynccontextmanager
@@ -16,11 +26,17 @@ async def lifespan(app: FastAPI):
     # 启动时创建数据库表
     # Base.metadata.create_all(bind=engine)
 
+    # 初始化 LangGraph Checkpointer 并编译统一工作流
+    await init_workflow()
+
     # 确保上传目录存在
     upload_dir = Path(settings.UPLOAD_DIR)
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     yield
+
+    # 释放 Checkpointer 连接
+    await shutdown_workflow()
 
 
 app = FastAPI(
@@ -57,6 +73,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
 app.include_router(topics.router, prefix="/api/topics", tags=["选题"])
 app.include_router(contents.router, prefix="/api/contents", tags=["内容"])
 app.include_router(images.router, prefix="/api/images", tags=["图片"])
+app.include_router(workflows.router, prefix="/api/workflows", tags=["统一工作流"])
 app.include_router(publish.router, prefix="/api/publish", tags=["发布"])
 app.include_router(settings_router.router, prefix="/api/settings", tags=["设置"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["仪表盘"])

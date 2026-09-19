@@ -16,7 +16,12 @@
             <el-icon><House /></el-icon>
             <span>仪表盘</span>
           </el-menu-item>
-          
+
+          <el-menu-item index="/workflows">
+            <el-icon><MagicStick /></el-icon>
+            <span>AI 图文工作台</span>
+          </el-menu-item>
+
           <el-sub-menu index="1">
             <template #title>
               <el-icon><Document /></el-icon>
@@ -120,7 +125,11 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-const activeMenu = computed(() => route.path)
+const activeMenu = computed(() => {
+  // 工作台子页面（如 /workflows/studio/xxx）时保持父菜单高亮
+  if (route.path.startsWith('/workflows')) return '/workflows'
+  return route.path
+})
 
 const userName = computed(() => userStore.user?.username || '管理员')
 const userRole = computed(() => {

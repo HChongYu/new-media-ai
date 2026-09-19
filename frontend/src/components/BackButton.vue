@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 import { defineComponent, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
@@ -7,7 +7,8 @@ export default defineComponent({
   name: 'BackButton',
   props: {
     to: {
-      type: [String, Object],
+      // -1 为默认哨兵值，表示执行 history.back()
+      type: [String, Object, Number],
       default: -1
     },
     text: {
@@ -23,7 +24,7 @@ export default defineComponent({
       if (props.to === -1) {
         history.back()
       } else {
-        router.push(props.to)
+        router.push(props.to as string | Record<string, unknown>)
       }
     }
 

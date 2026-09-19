@@ -70,6 +70,18 @@ export const publishApi = {
     request.delete(`/publish/${id}`)
 }
 
+// ========== 统一图文工作流相关 ==========
+export const workflowApi = {
+  start: (data: WorkflowStartParams) =>
+    request.post('/workflows/start', data, { timeout: 180000 }),
+  resume: (threadId: string, data: WorkflowResumeParams) =>
+    request.post(`/workflows/${threadId}/resume`, data, { timeout: 300000 }),
+  detail: (threadId: string) =>
+    request.get(`/workflows/${threadId}`),
+  list: (params?: WorkflowListQueryParams) =>
+    request.get('/workflows', { params })
+}
+
 // ========== 设置相关 ==========
 export const settingsApi = {
   get: () =>
@@ -290,4 +302,80 @@ export interface DashboardStats {
   total_images: number
   published_count: number
   recent_activities: DashboardActivity[]
+}
+
+// ========== 统一图文工作流类型 ==========
+/** 业务状态：awaiting_select 待选选题 / reviewing 待审核 / completed 已完成 等 */
+export type WorkflowProjectStatus =
+  | 'awaiting_select'
+  | 'writing'
+  | 'reviewing'
+  | 'generating_images'
+  | 'completed'
+
+/** 图中断点：human_select 人工选题 / human_review 人工审稿 / null 已结束 */
+export type WorkflowNextStep = 'human_select' | 'human_review' | null
+
+export interface ProposedTopic {
+  title: string
+  description: string
+  category: string
+  tags: string[]
+}
+
+export interface VisualPoint {
+  point: string
+  detail: string
+  image_prompt: string
+}
+
+export interface WorkflowProject {
+  id: string
+  thread_id: string
+  topic_direction: string
+  topic: string
+  platform: 'xiaohongshu' | 'wechat'
+  status: WorkflowProjectStatus
+  revision_count: number
+  article_content: { title: string; content: string } | null
+  image_assets: string[] | null
+  created_at: string
+  updated_at: string
+}
+
+/** GET/start/resume 返回的统一运行状态 */
+export interface WorkflowRunState {
+  project: WorkflowProject
+  next_step: WorkflowNextStep
+  interrupt: Record<string, unknown> | null
+  completed: boolean
+  proposed_topics: ProposedTopic[]
+  selected_topic: string
+  draft_title: string
+  draft_content: string
+  final_content: string
+  visual_points: VisualPoint[]
+  image_urls: string[]
+  revision_count: number
+}
+
+export interface WorkflowStartParams {
+  topic_direction: string
+  platform?: 'xiaohongshu' | 'wechat'
+}
+
+export interface WorkflowResumeParams {
+  action: 'select_topic' | 'review'
+  /** action=select_topic 时：选中的标题 */
+  data?: string
+  /** action=review 时：approve / reject */
+  status?: 'approve' | 'reject'
+  /** action=review 且 reject 时的修改意见 */
+  feedback?: string
+}
+
+export interface WorkflowListQueryParams {
+  page?: number
+  page_size?: number
+  status?: WorkflowProjectStatus
 }

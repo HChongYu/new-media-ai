@@ -9,7 +9,15 @@
     2. 创建默认管理员账号（admin / admin123）
 """
 from app.database import engine, Base, SessionLocal
-from app.models import User, Topic, Content, Image, PublishRecord, Settings
+from app.models import (
+    User,
+    Topic,
+    Content,
+    Image,
+    PublishRecord,
+    Settings,
+    ContentProject,
+)
 from app.core.security import hash_password
 
 

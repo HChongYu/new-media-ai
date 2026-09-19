@@ -20,6 +20,18 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '仪表盘' }
       },
       {
+        path: 'workflows',
+        name: 'WorkflowList',
+        component: () => import('@views/workflow/WorkflowListView.vue'),
+        meta: { title: 'AI 图文工作台' }
+      },
+      {
+        path: 'workflows/studio/:threadId?',
+        name: 'WorkflowStudio',
+        component: () => import('@views/workflow/WorkflowStudioView.vue'),
+        meta: { title: '图文创作工作台' }
+      },
+      {
         path: 'topics',
         name: 'TopicList',
         component: () => import('@views/topic/TopicListView.vue'),
