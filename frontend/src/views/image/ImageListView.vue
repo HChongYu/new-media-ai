@@ -1,6 +1,6 @@
 <template>
   <div class="image-list">
-    <PageHeader title="图片管理" :actions="pageActions" @action="handlePageAction" />
+    <PageHeader title="图片管理" />
 
     <Card>
       <DataList
@@ -30,77 +30,19 @@
         </template>
       </DataList>
     </Card>
-
-    <!-- 批量生成图片对话框 -->
-    <el-dialog v-model="batchGenerateDialog.visible" title="批量生成图片" width="500px">
-      <el-form :model="batchGenerateDialog.form" label-width="100px">
-        <el-form-item label="关联内容" required>
-          <el-select
-            v-model="batchGenerateDialog.form.content_id"
-            placeholder="请选择要配图的内容"
-            filterable
-            style="width: 100%;"
-          >
-            <el-option
-              v-for="item in contentOptions"
-              :key="item.id"
-              :label="item.title"
-              :value="item.id"
-            />
-          </el-select>
-          <div class="form-tip">提示：也可以在「内容工作台」中为指定内容直接配图，流程更顺畅</div>
-        </el-form-item>
-        <el-form-item label="图片类型">
-          <el-checkbox-group v-model="batchGenerateDialog.form.image_types">
-            <el-checkbox value="cover">封面图</el-checkbox>
-            <el-checkbox value="section">正文图</el-checkbox>
-            <el-checkbox value="summary">摘要图</el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-        <el-form-item label="生成数量">
-          <el-slider v-model="batchGenerateDialog.form.count" :min="1" :max="10" />
-        </el-form-item>
-        <el-form-item label="图片风格">
-          <el-select v-model="batchGenerateDialog.form.style" placeholder="请选择风格">
-            <el-option label="极简" value="minimalist" />
-            <el-option label="专业" value="professional" />
-            <el-option label="创意" value="creative" />
-            <el-option label="优雅" value="elegant" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="batchGenerateDialog.visible = false">取消</el-button>
-        <el-button type="primary" :loading="batchGenerateDialog.loading" @click="confirmBatchGenerate">
-          确定生成
-        </el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageHeader from '@components/PageHeader.vue'
-import type { PageAction } from '@components/PageHeader.vue'
 import Card from '@components/Card.vue'
 import { DataList } from '@components/data-driven'
 import type { FormField, TableColumn, DataListResult } from '@components/data-driven'
-import { imageApi, contentApi } from '@services/api'
+import { imageApi } from '@services/api'
 
 const dataListRef = ref()
-const contentOptions = ref<any[]>([])
-
-// ---- 拉取内容选项（替代手输内容 ID）----
-async function fetchContentOptions() {
-  try {
-    const result: any = await contentApi.list({ page: 1, page_size: 100 })
-    contentOptions.value = result?.data?.items || []
-  } catch (error) {
-    console.error('Failed to fetch content options:', error)
-  }
-}
 
 // ---- 查询字段配置 ----
 const queryFields: FormField[] = [
@@ -154,11 +96,6 @@ const columns: TableColumn[] = [
   { prop: 'actions', label: '操作', width: 120, fixed: 'right', slot: 'actions' },
 ]
 
-// ---- 页头操作按钮 ----
-const pageActions: PageAction[] = [
-  { label: '批量生成', type: 'primary', icon: 'LightBulb', key: 'batch-generate' },
-]
-
 // ---- 日期格式化 ----
 function formatDateTime(value: string): string {
   if (!value) return ''
@@ -176,60 +113,6 @@ async function handleFetchData(params: Record<string, any>): Promise<DataListRes
   return {
     list: result?.data?.items || [],
     total: result?.data?.total || 0,
-  }
-}
-
-// ---- 批量生成对话框 ----
-const batchGenerateDialog = reactive({
-  visible: false,
-  loading: false,
-  form: {
-    content_id: null as number | null,
-    image_types: ['cover'] as string[],
-    count: 3,
-    style: 'professional'
-  }
-})
-
-// ---- 页头按钮事件 ----
-async function handlePageAction(action: PageAction) {
-  if (action.key === 'batch-generate') {
-    batchGenerateDialog.form = {
-      content_id: null,
-      image_types: ['cover', 'section', 'summary'],
-      count: 3,
-      style: 'professional'
-    }
-    batchGenerateDialog.visible = true
-    fetchContentOptions()
-  }
-}
-
-// ---- 确认批量生成 ----
-async function confirmBatchGenerate() {
-  if (!batchGenerateDialog.form.content_id) {
-    ElMessage.warning('请选择要配图的内容')
-    return
-  }
-  if (batchGenerateDialog.form.image_types.length === 0) {
-    ElMessage.warning('请至少选择一种图片类型')
-    return
-  }
-
-  batchGenerateDialog.loading = true
-  try {
-    await imageApi.generate(batchGenerateDialog.form.content_id, {
-      image_type: batchGenerateDialog.form.image_types as any,
-      count: batchGenerateDialog.form.count,
-      style: batchGenerateDialog.form.style as any
-    })
-    ElMessage.success('图片生成成功')
-    batchGenerateDialog.visible = false
-    dataListRef.value?.refresh()
-  } catch (error) {
-    console.error('批量生成图片失败:', error)
-  } finally {
-    batchGenerateDialog.loading = false
   }
 }
 
@@ -257,12 +140,5 @@ async function deleteImage(image: any) {
 <style scoped>
 .image-list {
   padding: 20px;
-}
-
-.form-tip {
-  font-size: 12px;
-  color: #8F959E;
-  line-height: 1.6;
-  margin-top: 4px;
 }
 </style>

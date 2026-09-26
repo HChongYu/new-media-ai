@@ -1,14 +1,6 @@
 from pydantic import BaseModel
 
 
-class ImageGenerateRequest(BaseModel):
-    image_type: list[str] | None = None  # cover / section / summary
-    count: int | None = None
-    style: str | None = None  # minimalist / professional / creative / elegant
-    width: int | None = None
-    height: int | None = None
-
-
 class ImageResponse(BaseModel):
     id: int
     content_id: int

@@ -20,8 +20,6 @@ export const topicApi = {
     request.get('/topics', { params }),
   detail: (id: number) =>
     request.get(`/topics/${id}`),
-  generate: (data: TopicGenerateParams) =>
-    request.post('/topics/generate', data, { timeout: 120000 }),
   create: (data: TopicCreateParams) =>
     request.post('/topics', data),
   update: (id: number, data: TopicUpdateParams) =>
@@ -36,8 +34,6 @@ export const contentApi = {
     request.get('/contents', { params }),
   detail: (id: number) =>
     request.get(`/contents/${id}`),
-  generate: (topicId: number, params?: ContentGenerateParams) =>
-    request.post(`/topics/${topicId}/content`, params, { timeout: 120000 }),
   create: (data: ContentCreateParams) =>
     request.post('/contents', data),
   update: (id: number, data: ContentUpdateParams) =>
@@ -54,8 +50,6 @@ export const imageApi = {
     request.get('/images', { params }),
   byContent: (contentId: number) =>
     request.get(`/contents/${contentId}/images`),
-  generate: (contentId: number, data: ImageGenerateParams) =>
-    request.post(`/contents/${contentId}/images/generate`, data, { timeout: 120000 }),
   delete: (id: number) =>
     request.delete(`/images/${id}`)
 }
@@ -135,14 +129,6 @@ export interface TopicQueryParams {
   end_date?: string
 }
 
-export interface TopicGenerateParams {
-  keywords?: string[]
-  category?: string
-  target_audience?: string
-  content_style?: string
-  count?: number
-}
-
 export interface TopicCreateParams {
   title: string
   description: string
@@ -188,12 +174,6 @@ export interface ContentQueryParams {
   end_date?: string
 }
 
-export interface ContentGenerateParams {
-  platform?: 'xiaohongshu' | 'wechat'
-  tone?: 'professional' | 'casual' | 'enthusiastic'
-  length?: 'short' | 'medium' | 'long'
-}
-
 export interface ContentCreateParams {
   topic_id: number
   title: string
@@ -233,14 +213,6 @@ export interface ImageQueryParams {
   image_type?: string
   start_date?: string
   end_date?: string
-}
-
-export interface ImageGenerateParams {
-  image_type?: ('cover' | 'section' | 'summary')[]
-  count?: number
-  style?: 'minimalist' | 'professional' | 'creative' | 'elegant'
-  width?: number
-  height?: number
 }
 
 export interface PublishRecord {

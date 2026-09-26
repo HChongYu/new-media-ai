@@ -1,14 +1,6 @@
 from pydantic import BaseModel
 
 
-class TopicGenerateRequest(BaseModel):
-    keywords: list[str] | None = None
-    category: str | None = None
-    target_audience: str | None = None
-    content_style: str | None = None
-    count: int = 5
-
-
 class TopicCreate(BaseModel):
     title: str
     description: str

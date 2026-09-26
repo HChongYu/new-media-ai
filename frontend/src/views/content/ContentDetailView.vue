@@ -6,7 +6,7 @@
     <!-- 全流程步骤条 -->
     <Card>
       <el-steps :active="activeStep" align-center finish-status="success">
-        <el-step title="撰写文案" description="AI 生成或手动撰写" />
+        <el-step title="撰写文案" description="手动撰写 / 工作室生成" />
         <el-step title="智能配图" description="封面 / 正文 / 摘要图" />
         <el-step
           title="内容审核"
@@ -107,7 +107,7 @@
           </div>
           <div class="step-title">
             <div class="step-name">智能配图</div>
-            <div class="step-desc">AI 根据文案一键生成封面图、正文插图、摘要图（可跳过，审核前后均可生成）</div>
+            <div class="step-desc">封面 / 正文 / 摘要图</div>
           </div>
           <el-tag v-if="images.length" type="success" effect="plain">已生成 {{ images.length }} 张</el-tag>
         </div>
@@ -115,7 +115,7 @@
         <div class="step-body">
           <el-empty
             v-if="images.length === 0"
-            description="还没有配图，点击下方按钮一键生成"
+            description="暂无配图，可在「工作流工作室」中生成"
             :image-size="80"
           />
           <ImageGrid
@@ -126,12 +126,6 @@
             @view="viewImage"
             @delete="removeImage"
           />
-        </div>
-
-        <div class="step-footer">
-          <el-button type="primary" :icon="Picture" :loading="imageDialog.loading" @click="openImageDialog">
-            {{ images.length ? '继续生成配图' : 'AI 一键生成配图' }}
-          </el-button>
         </div>
       </div>
     </Card>
@@ -296,42 +290,6 @@
         </div>
       </div>
     </Card>
-
-    <!-- AI 配图生成对话框 -->
-    <el-dialog v-model="imageDialog.visible" title="AI 生成配图" width="520px">
-      <el-form :model="imageDialog.form" label-width="90px">
-        <el-form-item label="图片类型">
-          <el-checkbox-group v-model="imageDialog.form.image_types">
-            <el-checkbox value="cover">封面图（吸引眼球的主视觉）</el-checkbox>
-            <el-checkbox value="section">正文图（配合段落的插图）</el-checkbox>
-            <el-checkbox value="summary">摘要图（核心要点信息图）</el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-        <el-form-item label="生成数量">
-          <el-slider v-model="imageDialog.form.count" :min="1" :max="9" show-input />
-        </el-form-item>
-        <el-form-item label="图片风格">
-          <el-select v-model="imageDialog.form.style" style="width: 100%;">
-            <el-option label="极简" value="minimalist" />
-            <el-option label="专业" value="professional" />
-            <el-option label="创意" value="creative" />
-            <el-option label="优雅" value="elegant" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <el-alert
-        type="info"
-        :closable="false"
-        title="AI 将根据当前文案内容自动构思画面并逐张生成，通常需要 30-90 秒"
-        style="margin-bottom: 12px;"
-      />
-      <template #footer>
-        <el-button @click="imageDialog.visible = false">取消</el-button>
-        <el-button type="primary" :loading="imageDialog.loading" @click="confirmGenerateImages">
-          开始生成
-        </el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -340,7 +298,7 @@ import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Check, Lock, Close, Edit, Picture,
+  Check, Lock, Close, Edit,
 } from '@element-plus/icons-vue'
 import BackButton from '@components/BackButton.vue'
 import PageHeader from '@components/PageHeader.vue'
@@ -370,16 +328,6 @@ const records = ref<any[]>([])
 const reviewForm = reactive({
   status: 'approved' as 'approved' | 'rejected',
   review_note: '',
-})
-
-const imageDialog = reactive({
-  visible: false,
-  loading: false,
-  form: {
-    image_types: ['cover', 'section', 'summary'] as string[],
-    count: 3,
-    style: 'professional',
-  },
 })
 
 const platforms: {
@@ -548,35 +496,6 @@ function goEdit() {
 }
 
 // ---- 阶段 2：配图 ----
-function openImageDialog() {
-  imageDialog.visible = true
-}
-
-async function confirmGenerateImages() {
-  if (imageDialog.form.image_types.length === 0) {
-    ElMessage.warning('请至少选择一种图片类型')
-    return
-  }
-  imageDialog.loading = true
-  try {
-    await imageApi.generate(contentId.value, {
-      image_type: imageDialog.form.image_types as any,
-      count: imageDialog.form.count,
-      style: imageDialog.form.style as any,
-    })
-    ElMessage.success('配图生成完成')
-    imageDialog.visible = false
-    const res: any = await imageApi.byContent(contentId.value)
-    images.value = res?.data || []
-    scrollToStep('image')
-  } catch (error) {
-    console.error('Failed to generate images:', error)
-    ElMessage.error('配图生成失败，请稍后重试')
-  } finally {
-    imageDialog.loading = false
-  }
-}
-
 function viewImage(image: any) {
   window.open(image.image_url, '_blank')
 }

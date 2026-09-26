@@ -1,12 +1,6 @@
 from pydantic import BaseModel
 
 
-class ContentGenerateRequest(BaseModel):
-    platform: str | None = None  # xiaohongshu / wechat
-    tone: str | None = None  # professional / casual / enthusiastic
-    length: str | None = None  # short / medium / long
-
-
 class ContentCreate(BaseModel):
     topic_id: int
     title: str

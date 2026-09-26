@@ -18,7 +18,7 @@ from app.schemas.content import (
     ContentReviewRequest,
     ContentListResponse,
 )
-from app.schemas.image import ImageResponse, ImageGenerateRequest
+from app.schemas.image import ImageResponse
 from app.schemas.common import ResponseModel
 from app.services.publish_service import (
     SUPPORTED_PLATFORMS,
@@ -323,59 +323,6 @@ def get_content_images(
     ]
 
     return ResponseModel(data=result)
-
-
-@router.post("/{content_id}/images/generate", response_model=ResponseModel[list[ImageResponse]])
-async def generate_content_images(
-    content_id: int,
-    request: ImageGenerateRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """AI 为内容生成配图"""
-    from app.workflows.image import generate_images_workflow
-
-    content = db.query(Content).filter(Content.id == content_id).first()
-    if not content:
-        raise HTTPException(status_code=404, detail="内容不存在")
-
-    results = await generate_images_workflow(
-        content_title=content.title,
-        content_text=content.content_text,
-        image_types=request.image_type or ["cover", "section", "summary"],
-        count=request.count or 3,
-        style=request.style or "professional",
-        width=request.width or 1024,
-        height=request.height or 768,
-    )
-
-    saved_images = []
-    for img_data in results:
-        image = Image(
-            content_id=content_id,
-            image_url=img_data["image_url"],
-            image_type=img_data["image_type"],
-            prompt=img_data["prompt"],
-            width=img_data.get("width", request.width or 1024),
-            height=img_data.get("height", request.height or 768),
-        )
-        db.add(image)
-        db.flush()
-        saved_images.append(
-            ImageResponse(
-                id=image.id,
-                content_id=image.content_id,
-                image_url=image.image_url,
-                image_type=image.image_type,
-                prompt=image.prompt,
-                generated_at=image.generated_at.isoformat(),
-                width=image.width,
-                height=image.height,
-            )
-        )
-
-    db.commit()
-    return ResponseModel(data=saved_images)
 
 
 # ============================================================

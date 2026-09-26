@@ -27,22 +27,6 @@
       </DataList>
     </Card>
 
-    <!-- 生成选题对话框 -->
-    <el-dialog v-model="generateDialog.visible" title="生成选题" width="500px">
-      <DataForm
-        ref="generateFormRef"
-        v-model="generateDialog.form"
-        :fields="generateFields"
-        label-width="100px"
-      />
-      <template #footer>
-        <el-button @click="generateDialog.visible = false">取消</el-button>
-        <el-button type="primary" :loading="generateDialog.loading" @click="confirmGenerate">
-          确定生成
-        </el-button>
-      </template>
-    </el-dialog>
-
     <!-- 新建选题对话框 -->
     <el-dialog v-model="createDialog.visible" title="新建选题" width="500px">
       <DataForm
@@ -74,7 +58,6 @@ import { topicApi } from '@services/api'
 
 const router = useRouter()
 const dataListRef = ref()
-const generateFormRef = ref()
 const createFormRef = ref()
 
 // ---- 查询字段配置 ----
@@ -120,49 +103,7 @@ const columns: TableColumn[] = [
 
 // ---- 页头操作按钮 ----
 const pageActions: PageAction[] = [
-  { label: '生成选题', type: 'primary', icon: 'LightBulb', key: 'generate' },
   { label: '新建选题', type: 'success', icon: 'Plus', key: 'create' },
-]
-
-// ---- 生成选题对话框 ----
-const generateDialog = reactive({
-  visible: false,
-  loading: false,
-  form: {} as Record<string, any>,
-})
-
-const generateFields: FormField[] = [
-  {
-    prop: 'keywords',
-    label: '关键词',
-    cellType: 'input',
-    span: 24,
-    required: true,
-    placeholder: '多个关键词用逗号分隔',
-    controlProps: { maxlength: 200, showWordLimit: true },
-  },
-  {
-    prop: 'category',
-    label: '分类',
-    cellType: 'input',
-    span: 24,
-    placeholder: '如：科技、生活、教育',
-  },
-  {
-    prop: 'target_audience',
-    label: '目标受众',
-    cellType: 'input',
-    span: 24,
-    placeholder: '如：年轻白领、宝妈',
-  },
-  {
-    prop: 'count',
-    label: '生成数量',
-    cellType: 'number',
-    span: 24,
-    defaultValue: 5,
-    controlProps: { min: 1, max: 20 },
-  },
 ]
 
 // ---- 新建选题对话框 ----
@@ -221,35 +162,9 @@ function formatDateTime(value: string): string {
 
 // ---- 页头按钮事件 ----
 function handlePageAction(action: PageAction) {
-  if (action.key === 'generate') {
-    generateDialog.form = { count: 5 }
-    generateDialog.visible = true
-  } else if (action.key === 'create') {
+  if (action.key === 'create') {
     createDialog.form = {}
     createDialog.visible = true
-  }
-}
-
-// ---- 确认生成选题 ----
-async function confirmGenerate() {
-  const valid = await generateFormRef.value?.validate()
-  if (!valid) return
-
-  generateDialog.loading = true
-  try {
-    // 将逗号分隔的关键词字符串转为数组
-    const form = { ...generateDialog.form }
-    if (typeof form.keywords === 'string') {
-      form.keywords = form.keywords.split(',').map((k: string) => k.trim()).filter(Boolean)
-    }
-    await topicApi.generate(form)
-    ElMessage.success('选题生成成功')
-    generateDialog.visible = false
-    dataListRef.value?.reload()
-  } catch (error) {
-    console.error('生成选题失败:', error)
-  } finally {
-    generateDialog.loading = false
   }
 }
 

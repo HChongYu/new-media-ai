@@ -17,7 +17,7 @@
           <el-scrollbar height="380px" class="topic-scroll">
             <el-empty
               v-if="filteredTopics.length === 0"
-              description="暂无选题，请先在选题管理中创建或生成"
+              description="暂无选题，请先在选题管理中创建"
               :image-size="70"
             />
             <div
@@ -47,48 +47,16 @@
                 <el-radio value="image">图片</el-radio>
               </el-radio-group>
             </el-form-item>
-
-            <el-form-item label="发布平台">
-              <el-checkbox-group v-model="contentForm.platforms">
-                <el-checkbox value="xiaohongshu">小红书</el-checkbox>
-                <el-checkbox value="wechat">微信公众号</el-checkbox>
-              </el-checkbox-group>
-            </el-form-item>
-
-            <el-form-item label="内容风格">
-              <el-select v-model="contentForm.tone" placeholder="请选择风格">
-                <el-option label="专业严谨" value="professional" />
-                <el-option label="轻松活泼" value="casual" />
-                <el-option label="热情洋溢" value="enthusiastic" />
-              </el-select>
-            </el-form-item>
-
-            <el-form-item label="内容长度">
-              <el-select v-model="contentForm.length" placeholder="请选择长度">
-                <el-option label="短篇 (500字以内)" value="short" />
-                <el-option label="中篇 (500-1500字)" value="medium" />
-                <el-option label="长篇 (1500字以上)" value="long" />
-              </el-select>
-            </el-form-item>
           </el-form>
 
           <el-alert
             v-if="!selectedTopic"
-            title="请先在上方选择一个选题，再点击 AI 生成"
+            title="请先在上方选择一个选题"
             type="info"
             :closable="false"
             show-icon
             style="margin-bottom: 12px;"
           />
-          <el-button
-            type="primary"
-            style="width: 100%; margin-top: 4px;"
-            :loading="generating"
-            :disabled="!selectedTopic"
-            @click="generateContent"
-          >
-            {{ generating ? 'AI 正在生成中，请稍候...' : 'AI 生成内容' }}
-          </el-button>
         </Card>
       </el-col>
 
@@ -127,23 +95,16 @@ const router = useRouter()
 const topicSearch = ref('')
 const topics = ref<any[]>([])
 const selectedTopic = ref<any>(null)
-const generating = ref(false)
 const saving = ref(false)
 const submitting = ref(false)
 
 type ContentType = 'article' | 'image'
-type Platform = 'xiaohongshu' | 'wechat'
-type Tone = 'professional' | 'casual' | 'enthusiastic'
-type Length = 'short' | 'medium' | 'long'
 
 interface ContentFormState {
   topic_id: number
   title: string
   content_text: string
   content_type: ContentType
-  platforms: Platform[]
-  tone: Tone
-  length: Length
 }
 
 const contentForm = reactive<ContentFormState>({
@@ -151,9 +112,6 @@ const contentForm = reactive<ContentFormState>({
   title: '',
   content_text: '',
   content_type: 'article',
-  platforms: ['xiaohongshu', 'wechat'],
-  tone: 'professional',
-  length: 'medium'
 })
 
 const filteredTopics = computed(() => {
@@ -224,45 +182,10 @@ const validateForm = (): boolean => {
     return false
   }
   if (!contentForm.content_text.trim()) {
-    ElMessage.warning('请输入内容正文，或点击「AI 生成内容」')
+    ElMessage.warning('请输入内容正文')
     return false
   }
   return true
-}
-
-// ---- AI 生成内容（大纲 -> 写作 -> 自动质检返工，由后端 LangGraph 工作流完成）----
-const generateContent = async () => {
-  if (!selectedTopic.value) {
-    ElMessage.warning('请先选择一个选题')
-    return
-  }
-  if (contentForm.platforms.length === 0) {
-    ElMessage.warning('请至少选择一个发布平台')
-    return
-  }
-
-  generating.value = true
-  try {
-    const params = {
-      platform: contentForm.platforms[0],
-      tone: contentForm.tone,
-      length: contentForm.length
-    }
-    const result: any = await contentApi.generate(selectedTopic.value.id, params)
-    const newId = result?.data?.id
-    if (newId) {
-      // 后端已将生成结果直接落库，进入内容工作台继续「配图 → 审核 → 发布」
-      ElMessage.success('文章已生成，接下来为它配图吧')
-      router.replace(`/content/detail/${newId}?step=image`)
-    } else {
-      ElMessage.error('内容生成失败：返回数据为空')
-    }
-  } catch (error) {
-    console.error('Failed to generate content:', error)
-    ElMessage.error('内容生成失败，请检查后端 LLM 配置')
-  } finally {
-    generating.value = false
-  }
 }
 
 // ---- 保存草稿 ----
@@ -276,7 +199,6 @@ const saveDraft = async () => {
       title: contentForm.title,
       content_text: contentForm.content_text,
       content_type: contentForm.content_type,
-      platform: contentForm.platforms[0],
     })
     const newId = result?.data?.id
     ElMessage.success('草稿保存成功')
@@ -299,7 +221,6 @@ const submitForReview = async () => {
       title: contentForm.title,
       content_text: contentForm.content_text,
       content_type: contentForm.content_type,
-      platform: contentForm.platforms[0],
     })
 
     const contentId = result?.data?.id
