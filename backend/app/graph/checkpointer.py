@@ -2,9 +2,10 @@
 Checkpointer 工厂与生命周期管理
 
 按配置自动选择持久化后端：
+- CHECKPOINTER_BACKEND=memory -> MemorySaver（显式 mock，优先级最高，仅本地开发/测试）
 - postgresql*  -> AsyncPostgresSaver（生产，需 langgraph-checkpoint-postgres + psycopg）
 - sqlite / 其它 -> AsyncSqliteSaver（开发默认，独立文件 langgraph_checkpoints.db）
-- 依赖缺失等异常 -> MemorySaver（仅内存，重启丢失，只能用于临时调试）
+- 依赖缺失等异常 -> MemorySaver（自动降级，重启丢失，只能用于临时调试）
 
 业务库（SQLAlchemy 同步引擎）与 Checkpoint 库在 SQLite 模式下使用不同文件，
 避免同步连接与 aiosqlite 连接争抢同一个库文件。
@@ -22,6 +23,10 @@ _SQLITE_CHECKPOINT_FILE = "langgraph_checkpoints.db"
 
 def _resolve_backend() -> tuple[str, str]:
     """返回 (backend, conn_string)"""
+    # 显式内存 mock 开关，优先级最高
+    if settings.CHECKPOINTER_BACKEND.strip().lower() == "memory":
+        return "memory", ""
+
     override = settings.LANGGRAPH_DB_URL.strip()
 
     if override:
@@ -56,7 +61,9 @@ class CheckpointerLifecycle:
         backend, conn_string = _resolve_backend()
         self.backend = backend
 
-        if backend == "postgres":
+        if backend == "memory":
+            self._saver = self._memory_saver()
+        elif backend == "postgres":
             self._saver = await self._start_postgres(conn_string)
         else:
             self._saver = await self._start_sqlite(conn_string)

@@ -8,7 +8,7 @@ import logging
 
 from app.services.llm_service import get_llm_client
 from app.services.image_service import generate_image
-from app.graph.prompts import VISUAL_POINTS_PROMPT
+from app.services.prompt_service import render_prompt
 from app.graph.state import ArticleState, STATUS_COMPLETED
 from app.graph.utils import parse_json_array
 
@@ -27,7 +27,9 @@ async def extract_visual_points(state: ArticleState) -> dict:
     """将 final_content 提炼为知识点，并为每个知识点生成英文绘图提示词"""
     llm = get_llm_client()
 
-    prompt = VISUAL_POINTS_PROMPT.format(
+    prompt = await render_prompt(
+        "visual_points",
+        bucket_id=state.get("thread_id"),
         draft_title=state.get("draft_title", state.get("selected_topic", "")),
         final_content=state.get("final_content", "")[:3000],
         count=VISUAL_POINT_COUNT,

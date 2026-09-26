@@ -16,6 +16,7 @@ from app.routers import (
     publish,
     settings as settings_router,
     dashboard,
+    prompts,
 )
 from app.graph.workflow import init_workflow, shutdown_workflow
 
@@ -77,6 +78,7 @@ app.include_router(workflows.router, prefix="/api/workflows", tags=["统一工�
 app.include_router(publish.router, prefix="/api/publish", tags=["发布"])
 app.include_router(settings_router.router, prefix="/api/settings", tags=["设置"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["仪表盘"])
+app.include_router(prompts.router, prefix="/api/prompts", tags=["提示词管理"])
 
 
 @app.get("/api/health")

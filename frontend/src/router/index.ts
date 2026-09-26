@@ -95,6 +95,12 @@ const routes: RouteRecordRaw[] = [
         name: 'Settings',
         component: () => import('@views/settings/SettingsView.vue'),
         meta: { title: '系统设置' }
+      },
+      {
+        path: 'settings/prompts',
+        name: 'PromptManage',
+        component: () => import('@views/settings/PromptManageView.vue'),
+        meta: { title: '提示词管理' }
       }
     ]
   }

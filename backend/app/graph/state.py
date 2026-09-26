@@ -47,6 +47,7 @@ class ArticleState(TypedDict, total=False):
     # ----------------------------------------------------------
     # 流程控制
     # ----------------------------------------------------------
+    thread_id: str  # 工作流标识，同时作为提示词 A/B 实验的分桶键
     revision_count: int
     current_status: str  # planning / writing / reviewing / completed
     messages: Annotated[list[BaseMessage], operator.add]

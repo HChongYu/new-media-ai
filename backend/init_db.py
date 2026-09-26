@@ -17,8 +17,31 @@ from app.models import (
     PublishRecord,
     Settings,
     ContentProject,
+    PromptTemplate,
 )
 from app.core.security import hash_password
+from app.graph.prompts import PROMPT_REGISTRY
+
+
+def seed_prompt_templates(db) -> None:
+    """将代码内置提示词作为 v1 种子写入（按 key 幂等，已有版本不动）"""
+    for key, meta in PROMPT_REGISTRY.items():
+        exists = db.query(PromptTemplate).filter(PromptTemplate.key == key).first()
+        if exists:
+            continue
+        db.add(
+            PromptTemplate(
+                key=key,
+                version=1,
+                name=meta["name"],
+                content=meta["template"],
+                change_note="系统内置初始版本",
+                status="active",
+                variant="main",
+            )
+        )
+    db.commit()
+    print("提示词模板种子检查完成")
 
 
 def init_database():
@@ -27,7 +50,7 @@ def init_database():
     Base.metadata.create_all(bind=engine)
     print("数据表创建完成")
 
-    # 创建默认管理员
+    # 创建默认管理员 + 初始化提示词模板
     db = SessionLocal()
     try:
         admin = db.query(User).filter(User.username == "admin").first()
@@ -43,6 +66,8 @@ def init_database():
             print("默认管理员账号创建完成：admin / admin123")
         else:
             print("管理员账号已存在，跳过创建")
+
+        seed_prompt_templates(db)
     finally:
         db.close()
 

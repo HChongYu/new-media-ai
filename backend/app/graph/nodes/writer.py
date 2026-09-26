@@ -1,10 +1,7 @@
 """generate_draft：根据 selected_topic 撰写技术长文；驳回后带反馈重写"""
 from app.services.llm_service import get_llm_client
-from app.graph.prompts import (
-    DRAFT_WRITING_PROMPT,
-    PLATFORM_DESC,
-    PLATFORM_STYLE,
-)
+from app.services.prompt_service import render_prompt
+from app.graph.prompts import PLATFORM_DESC, PLATFORM_STYLE
 from app.graph.state import ArticleState, STATUS_WRITING
 
 
@@ -26,7 +23,9 @@ async def generate_draft(state: ArticleState) -> dict:
             f"{feedback}\n"
         )
 
-    prompt = DRAFT_WRITING_PROMPT.format(
+    prompt = await render_prompt(
+        "draft_writing",
+        bucket_id=state.get("thread_id"),
         selected_topic=state["selected_topic"],
         platform_desc=PLATFORM_DESC.get(platform, "小红书"),
         platform_style=PLATFORM_STYLE.get(platform, PLATFORM_STYLE["xiaohongshu"]),

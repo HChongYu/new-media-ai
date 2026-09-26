@@ -78,6 +78,7 @@ async def start_workflow(
     graph = get_workflow()
 
     initial_state = {
+        "thread_id": thread_id,
         "topic_direction": topic_direction,
         "platform": platform,
         "proposed_topics": [],

@@ -101,3 +101,25 @@ PLATFORM_DESC = {
     "xiaohongshu": "小红书",
     "wechat": "微信公众号",
 }
+
+
+# ============================================================
+# 逻辑提示词注册表
+#
+# key 为运行时加载标识（DB prompt_templates 表按此关联版本），
+# template 是代码内置模板：DB 无数据 / 不可用时兜底，同时作为建表种子。
+# ============================================================
+PROMPT_REGISTRY: dict[str, dict[str, str]] = {
+    "topic_plan": {
+        "name": "选题规划",
+        "template": TOPIC_PLAN_PROMPT,
+    },
+    "draft_writing": {
+        "name": "撰稿（含驳回重写）",
+        "template": DRAFT_WRITING_PROMPT,
+    },
+    "visual_points": {
+        "name": "视觉知识点提炼",
+        "template": VISUAL_POINTS_PROMPT,
+    },
+}

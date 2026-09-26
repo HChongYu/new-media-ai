@@ -2,7 +2,8 @@
 import logging
 
 from app.services.llm_service import get_llm_client
-from app.graph.prompts import TOPIC_PLAN_PROMPT, PLATFORM_DESC
+from app.services.prompt_service import render_prompt
+from app.graph.prompts import PLATFORM_DESC
 from app.graph.state import ArticleState, STATUS_PLANNING
 from app.graph.utils import parse_json_array
 
@@ -16,7 +17,9 @@ async def plan_topics(state: ArticleState) -> dict:
     llm = get_llm_client()
 
     platform = state.get("platform") or "xiaohongshu"
-    prompt = TOPIC_PLAN_PROMPT.format(
+    prompt = await render_prompt(
+        "topic_plan",
+        bucket_id=state.get("thread_id"),
         topic_direction=state["topic_direction"],
         count=TOPIC_COUNT,
         platform_desc=PLATFORM_DESC.get(platform, "小红书 / 微信公众号"),

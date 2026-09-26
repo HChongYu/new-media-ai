@@ -17,13 +17,18 @@ class Settings(BaseSettings):
     #   也可显式指定文件路径或 sqlite:///./xxx.db
     LANGGRAPH_DB_URL: str = ""
 
+    # Checkpointer 后端开关：
+    # auto   -> 跟随 LANGGRAPH_DB_URL / DATABASE_URL 自动选择（默认）
+    # memory -> 纯内存 mock，不依赖任何数据库，重启后状态丢失（仅本地开发/测试）
+    CHECKPOINTER_BACKEND: str = "auto"
+
     # JWT
     SECRET_KEY: str = "your-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24小时
 
     # LLM
-    LLM_PROVIDER: str = "openai"  # openai / anthropic / local
+    LLM_PROVIDER: str = "openai"  # openai / anthropic / local / mock
     LLM_MODEL: str = "gpt-4"
     LLM_API_KEY: str = ""
     LLM_API_BASE: str = ""  # 本地模型或代理地址

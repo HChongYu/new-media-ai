@@ -5,6 +5,7 @@ from app.models.image import Image
 from app.models.publish_record import PublishRecord
 from app.models.settings import Settings
 from app.models.workflow_project import ContentProject
+from app.models.prompt_template import PromptTemplate
 
 __all__ = [
     "User",
@@ -14,4 +15,5 @@ __all__ = [
     "PublishRecord",
     "Settings",
     "ContentProject",
+    "PromptTemplate",
 ]

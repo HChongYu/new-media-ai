@@ -90,6 +90,28 @@ export const dashboardApi = {
     request.get('/dashboard/stats')
 }
 
+// ========== 提示词工程化管理相关 ==========
+export const promptApi = {
+  /** 提示词键总览（含当前生效版本 / 是否实验中） */
+  listKeys: () =>
+    request.get('/prompts'),
+  /** 某 key 的全部历史版本 */
+  listVersions: (key: string) =>
+    request.get(`/prompts/${key}/versions`),
+  /** 基于最新版本新建草稿 */
+  createVersion: (key: string, data: PromptVersionCreateParams) =>
+    request.post(`/prompts/${key}/versions`, data),
+  /** 发布 / 回滚到指定版本（唯一主干） */
+  activate: (key: string, version: number) =>
+    request.post(`/prompts/${key}/versions/${version}/activate`),
+  /** 发起 A/B 实验 */
+  startExperiment: (key: string, data: PromptExperimentStartParams) =>
+    request.post(`/prompts/${key}/experiment`, data),
+  /** 停止实验，流量全部回归主干 */
+  stopExperiment: (key: string) =>
+    request.delete(`/prompts/${key}/experiment`)
+}
+
 // ========== 类型定义 ==========
 export interface User {
   id: number
@@ -350,4 +372,43 @@ export interface WorkflowListQueryParams {
   page?: number
   page_size?: number
   status?: WorkflowProjectStatus
+}
+
+// ========== 提示词管理类型 ==========
+/** 版本状态：draft 草稿 / active 生效中 / archived 已归档 */
+export type PromptVersionStatus = 'draft' | 'active' | 'archived'
+
+export interface PromptVersion {
+  id: number
+  key: string
+  version: number
+  name: string
+  content: string
+  change_note: string | null
+  status: PromptVersionStatus
+  /** main 主干；实验变体为 B / C */
+  variant: string
+  /** 实验变体流量百分比；主干为 null */
+  traffic_percent: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface PromptKeySummary {
+  key: string
+  name: string
+  latest_version: number | null
+  in_experiment: boolean
+  active: PromptVersion[]
+}
+
+export interface PromptVersionCreateParams {
+  content: string
+  change_note?: string
+}
+
+export interface PromptExperimentStartParams {
+  /** 主干默认取当前生效主干，一般不用传 */
+  baseline_version?: number
+  variants: Array<{ version: number; traffic_percent: number }>
 }
