@@ -1,11 +1,15 @@
+import logging
+import time
+import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
+from app.core.logging import setup_logging, bind_request_id, reset_context
 from app.database import engine, Base
 from app.routers import (
     auth,
@@ -19,6 +23,10 @@ from app.routers import (
     prompts,
 )
 from app.graph.workflow import init_workflow, shutdown_workflow
+
+# 必须在创建 app 前完成日志初始化，使启动阶段日志也走统一配置
+setup_logging()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -47,13 +55,37 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# 调试中间件：打印所有请求头
+# 访问日志中间件：为每个请求生成 / 透传 request_id，记录方法、路径、状态码与耗时。
+# 注意：刻意不记录 Authorization 等任何请求头，避免 token 等敏感信息写入日志。
 @app.middleware("http")
-async def log_requests(request, call_next):
-    auth = request.headers.get("Authorization", "无")
-    print(f"[DEBUG] {request.method} {request.url.path} - Authorization: {auth[:30] if auth != '无' else '无'}...")
-    response = await call_next(request)
-    return response
+async def access_log_middleware(request: Request, call_next):
+    # 优先透传上游传入的 request_id，便于全链路排查；没有则生成
+    request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
+    ctx_token = bind_request_id(request_id)
+
+    start = time.perf_counter()
+    status_code = 500
+    response = None
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    except Exception:
+        logger.exception("请求处理异常: %s %s", request.method, request.url.path)
+        raise
+    finally:
+        duration_ms = (time.perf_counter() - start) * 1000
+        if response is not None:
+            # 响应头回传，前端 / 调用方可凭此 id 定位日志
+            response.headers["X-Request-ID"] = request_id
+        logger.info(
+            "%s %s -> %d (%.1fms)",
+            request.method,
+            request.url.path,
+            status_code,
+            duration_ms,
+        )
+        reset_context(request_token=ctx_token)
 
 # CORS 配置
 app.add_middleware(

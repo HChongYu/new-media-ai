@@ -6,6 +6,10 @@ class Settings(BaseSettings):
     APP_NAME: str = "AI自媒体运营平台"
     DEBUG: bool = True
 
+    # 日志
+    LOG_LEVEL: str = "INFO"  # DEBUG / INFO / WARNING / ERROR
+    LOG_JSON_FORMAT: bool = False  # 生产环境建议 true，输出 JSON 结构化日志
+
     # 数据库
     # PostgreSQL: postgresql+psycopg://user:password@localhost:5432/op_ai
     # SQLite (开发用): sqlite:///./op_ai.db

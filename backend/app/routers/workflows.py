@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.core.deps import get_current_user
+from app.core.logging import bind_thread_id, reset_context
 from app.models.user import User
 from app.models.workflow_project import ContentProject
 from app.schemas.common import ResponseModel
@@ -130,6 +131,7 @@ async def start(
     db.add(project)
     db.flush()  # 拿到 id / thread_id
 
+    thread_token = bind_thread_id(project.thread_id)
     try:
         snap = await start_workflow(
             thread_id=project.thread_id,
@@ -142,6 +144,8 @@ async def start(
             status_code=502,
             detail=f"AI 工作流执行失败，请检查模型配置：{e}",
         )
+    finally:
+        reset_context(thread_token=thread_token)
 
     _sync_project(project, snap)
     db.commit()
@@ -188,6 +192,7 @@ async def resume(
             raise HTTPException(status_code=400, detail="驳回时必须填写修改意见 feedback")
         resume_value = {"status": request.status, "feedback": (request.feedback or "").strip()}
 
+    thread_token = bind_thread_id(thread_id)
     try:
         new_snap = await resume_workflow(thread_id, resume_value)
     except Exception as e:
@@ -196,6 +201,8 @@ async def resume(
             status_code=502,
             detail=f"AI 工作流执行失败，请检查模型配置：{e}",
         )
+    finally:
+        reset_context(thread_token=thread_token)
 
     _sync_project(project, new_snap)
     db.commit()

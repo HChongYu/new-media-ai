@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -9,20 +11,19 @@ from app.schemas.user import LoginRequest, LoginResponse, UserResponse
 from app.schemas.common import ResponseModel
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/login", response_model=ResponseModel[LoginResponse])
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     """用户登录"""
     user = db.query(User).filter(User.username == request.username).first()
-    print(f"[DEBUG] 登录尝试 - 用户名: {request.username}")
-    print(f"[DEBUG] 数据库查询结果 - user: {user}")
-    if user:
-        print(f"[DEBUG] 用户详情 - ID: {user.id}, Username: {user.username}, Email: {user.email}")
-        print(f"[DEBUG] 密码验证 - 传入密码: {request.password}, 哈希值: {user.hashed_password[:20]}...")
     if not user or not verify_password(request.password, user.hashed_password):
+        # 只记录用户名用于排查，严禁记录明文密码 / 哈希
+        logger.warning("登录失败：用户名不存在或密码错误 username=%s", request.username)
         raise HTTPException(status_code=401, detail="用户名或密码错误")
 
+    logger.info("登录成功 user_id=%s username=%s", user.id, user.username)
     token = create_token({"sub": str(user.id)})
 
     return ResponseModel(

@@ -1,9 +1,12 @@
+import logging
 from datetime import datetime, timedelta
 
 import bcrypt
 from jose import jwt
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 def hash_password(password: str) -> str:
@@ -31,10 +34,9 @@ def decode_token(token: str) -> dict | None:
     """解码 JWT Token"""
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        print(f"[DEBUG] token 解码成功: {payload}")
+        logger.debug("token 解码成功，sub=%s", payload.get("sub"))
         return payload
     except Exception as e:
-        print(f"[DEBUG] token 解码失败: {e}")
-        print(f"[DEBUG] SECRET_KEY: {settings.SECRET_KEY}")
-        print(f"[DEBUG] ALGORITHM: {settings.ALGORITHM}")
+        # 只记录失败原因（过期 / 签名错误等），严禁打印 token 与 SECRET_KEY
+        logger.warning("token 解码失败: %s", e)
         return None
