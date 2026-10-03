@@ -9,6 +9,7 @@ import logging
 from app.services.llm_service import get_llm_client
 from app.services.image_service import generate_image
 from app.services.prompt_service import render_prompt
+from app.graph.fallbacks import fallback_visual_points
 from app.graph.state import ArticleState, STATUS_COMPLETED
 from app.graph.utils import parse_json_array
 
@@ -35,8 +36,21 @@ async def extract_visual_points(state: ArticleState) -> dict:
         count=VISUAL_POINT_COUNT,
     )
 
-    response = await llm.ainvoke(prompt)
-    points = parse_json_array(response.content)
+    try:
+        response = await llm.ainvoke(prompt)
+        response_text = response.content
+    except Exception as exc:
+        # 主备模型全部失败 / 熔断：兜底 1 个知识点卡片，后续仍可正常配图
+        logger.error("视觉知识点 LLM 调用失败，启用兜底视觉模板：%s", exc)
+        points = fallback_visual_points(
+            state.get("draft_title", state.get("selected_topic", ""))
+        )
+        return {
+            "visual_points": points,
+            "image_prompts": [item["image_prompt"] for item in points],
+        }
+
+    points = parse_json_array(response_text)
 
     if points is None:
         # 降级：无法解析时不阻断流程，用文章标题生成一个通用提示词
@@ -45,7 +59,7 @@ async def extract_visual_points(state: ArticleState) -> dict:
             {
                 "point": state.get("draft_title", "技术要点"),
                 "detail": "",
-                "image_prompt": response.content[:500],
+                "image_prompt": response_text[:500],
             }
         ]
 

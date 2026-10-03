@@ -4,13 +4,14 @@ import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
 
 from app.config import settings
 from app.core.logging import setup_logging, bind_request_id, reset_context
-from app.database import engine, Base
+from app.database import engine, Base, dispose_engine
 from app.routers import (
     auth,
     topics,
@@ -46,6 +47,9 @@ async def lifespan(app: FastAPI):
 
     # 释放 Checkpointer 连接
     await shutdown_workflow()
+    # 释放业务库连接池（此时已停止接收新请求，在途请求由 uvicorn 等待处理完）
+    dispose_engine()
+    logger.info("业务数据库连接池已释放")
 
 
 app = FastAPI(
@@ -115,5 +119,24 @@ app.include_router(prompts.router, prefix="/api/prompts", tags=["提示词管理
 
 @app.get("/api/health")
 def health_check():
-    """健康检查"""
+    """存活检查（liveness）：进程可响应即健康，不检查外部依赖，避免依赖抖动引发容器反复重启"""
     return {"status": "ok", "message": "AI 自媒体运营平台运行中"}
+
+
+@app.get("/api/health/ready")
+def readiness_check(response: Response):
+    """就绪检查（readiness）：业务库可用才返回 200 接收流量，否则返回 503。
+
+    同步引擎 + 普通 def，FastAPI 自动放到线程池执行，不阻塞事件循环。
+    """
+    checks = {"database": "ok"}
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception:
+        logger.exception("就绪检查失败：业务数据库不可用")
+        checks["database"] = "error"
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"status": "error", "checks": checks}
+
+    return {"status": "ok", "checks": checks}

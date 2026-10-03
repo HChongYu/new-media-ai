@@ -37,6 +37,13 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = ""
     LLM_API_BASE: str = ""  # 本地模型或代理地址
 
+    # LLM 容错：主备 fallback 链 + 熔断器
+    # 备用模型名（逗号分隔，按顺序尝试），复用同一 provider / API Key / Base URL；
+    # 留空则只有主模型。示例："sensenova-6.8-flash,sensenova-5"
+    LLM_FALLBACK_MODELS: str = ""
+    LLM_CIRCUIT_FAILURE_THRESHOLD: int = 5  # 单模型连续失败次数达到后跳闸
+    LLM_CIRCUIT_RECOVERY_SECONDS: int = 30  # 熔断打开后的冷却时间，到期后半开试探
+
     # 图片生成
     IMAGE_PROVIDER: str = "mock"  # sensenova / openai / local / mock
     SD_WEBUI_URL: str = "http://127.0.0.1:7860"  # 本地 Stable Diffusion WebUI 地址

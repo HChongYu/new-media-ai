@@ -3,6 +3,7 @@ import logging
 
 from app.services.llm_service import get_llm_client
 from app.services.prompt_service import render_prompt
+from app.graph.fallbacks import fallback_topics
 from app.graph.prompts import PLATFORM_DESC
 from app.graph.state import ArticleState, STATUS_PLANNING
 from app.graph.utils import parse_json_array
@@ -25,8 +26,16 @@ async def plan_topics(state: ArticleState) -> dict:
         platform_desc=PLATFORM_DESC.get(platform, "小红书 / 微信公众号"),
     )
 
-    response = await llm.ainvoke(prompt)
-    raw = response.content
+    try:
+        response = await llm.ainvoke(prompt)
+        raw = response.content
+    except Exception as exc:
+        # 主备模型全部失败 / 熔断：兜底 1 条选题，流程继续到人工选择
+        logger.error("选题节点 LLM 调用失败，启用兜底选题模板：%s", exc)
+        return {
+            "proposed_topics": fallback_topics(state["topic_direction"]),
+            "current_status": STATUS_PLANNING,
+        }
 
     topics = parse_json_array(raw)
     if topics is None:

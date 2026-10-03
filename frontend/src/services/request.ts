@@ -38,12 +38,12 @@ request.interceptors.response.use(
       switch (error.response.status) {
         case 401:
           // token 无效或过期，清除并跳转登录页
-          // localStorage.removeItem('token')
+          localStorage.removeItem('token')
           ElMessage.error('登录已过期，请重新登录')
           // 避免重复跳转
-          // if (window.location.pathname !== '/login') {
-          //   window.location.href = '/login'
-          // }
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login'
+          }
           break
         case 403:
           ElMessage.error('禁止访问')

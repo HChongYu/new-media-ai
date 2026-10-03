@@ -1,16 +1,23 @@
 """
 LLM 服务封装
 
-支持 OpenAI / Anthropic / 本地模型 / Mock，通过 LLM_PROVIDER 切换
+支持 OpenAI / Anthropic / 本地模型 / Mock，通过 LLM_PROVIDER 切换。
+
+真实 provider 下返回 ResilientLLM：
+- 主备 fallback 链：主模型失败（或熔断中）时按 LLM_FALLBACK_MODELS 顺序接管；
+- 熔断器：每个模型独立熔断，持续故障时快速失败，不再空等超时；
+- 全部模型不可用时抛出异常，由各 graph 节点的兜底模板接住，流程不中断。
 """
 import json
 import logging
+from typing import Any
 
 from langchain_core.messages import AIMessage
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 
 from app.config import settings
+from app.core.circuit_breaker import AsyncCircuitBreaker, CircuitBreakerOpenError
 
 logger = logging.getLogger(__name__)
 
@@ -181,8 +188,117 @@ print(result.content)
         return ""
 
 
+class ResilientLLM:
+    """
+    带主备 fallback 链与熔断器的 LLM 包装器。
+
+    - targets 按 [(模型名, 客户端), ...] 顺序调用：主模型 → 备用模型；
+    - 每个模型持有独立熔断器，熔断中自动跳过，故障不会拖垮整次调用；
+    - 所有模型都失败 / 熔断时抛出最后一个异常，交由节点层兜底模板处理；
+    - 备用模型调用成功仅说明本次接管，不改变主模型的熔断恢复节奏。
+    """
+
+    def __init__(self, targets: list[tuple[str, Any]]):
+        if not targets:
+            raise ValueError("ResilientLLM 至少需要一个模型目标")
+        self._targets = targets
+        self._primary_name = targets[0][0]
+        self._breakers: dict[str, AsyncCircuitBreaker] = {
+            name: AsyncCircuitBreaker(
+                name=f"llm:{name}",
+                failure_threshold=settings.LLM_CIRCUIT_FAILURE_THRESHOLD,
+                recovery_seconds=settings.LLM_CIRCUIT_RECOVERY_SECONDS,
+            )
+            for name, _ in targets
+        }
+
+    async def ainvoke(self, prompt: Any, *args: Any, **kwargs: Any) -> AIMessage:
+        return await self._invoke_async(prompt, *args, **kwargs)
+
+    def invoke(self, prompt: Any, *args: Any, **kwargs: Any) -> AIMessage:
+        return self._invoke_sync(prompt, *args, **kwargs)
+
+    async def _invoke_async(self, prompt: Any, *args, **kwargs) -> Any:
+        last_exc: Exception | None = None
+        for name, client in self._targets:
+            breaker = self._breakers[name]
+            if not breaker.allow_request():
+                logger.warning("模型 %s 熔断中，本次跳过", name)
+                last_exc = last_exc or CircuitBreakerOpenError(breaker.name)
+                continue
+            try:
+                response = await client.ainvoke(prompt, *args, **kwargs)
+            except Exception as exc:
+                breaker.record_failure()
+                last_exc = exc
+                logger.warning("LLM 模型 %s 调用失败：%s", name, exc)
+                continue
+            breaker.record_success()
+            self._log_takeover(name)
+            return response
+
+        logger.error("全部 LLM 模型均不可用（失败或熔断中），交由节点兜底")
+        raise last_exc or RuntimeError("无可用的 LLM 模型")
+
+    def _invoke_sync(self, prompt: Any, *args, **kwargs) -> Any:
+        last_exc: Exception | None = None
+        for name, client in self._targets:
+            breaker = self._breakers[name]
+            if not breaker.allow_request():
+                logger.warning("模型 %s 熔断中，本次跳过", name)
+                last_exc = last_exc or CircuitBreakerOpenError(breaker.name)
+                continue
+            try:
+                response = client.invoke(prompt, *args, **kwargs)
+            except Exception as exc:
+                breaker.record_failure()
+                last_exc = exc
+                logger.warning("LLM 模型 %s 调用失败：%s", name, exc)
+                continue
+            breaker.record_success()
+            self._log_takeover(name)
+            return response
+
+        logger.error("全部 LLM 模型均不可用（失败或熔断中），交由节点兜底")
+        raise last_exc or RuntimeError("无可用的 LLM 模型")
+
+    def _log_takeover(self, name: str) -> None:
+        if name != self._primary_name:
+            logger.warning("主模型 %s 不可用，本次由备用模型 %s 接管", self._primary_name, name)
+
+
+def _build_chat_client(provider: str, model: str, api_key: str) -> Any:
+    """构建指定模型的聊天客户端（主 / 备模型共用同一 provider 与凭证）"""
+    if provider == "anthropic":
+        return ChatAnthropic(
+            model=model,
+            anthropic_api_key=api_key,
+            max_tokens=4096,
+            temperature=0.7,
+        )
+
+    # 默认使用 OpenAI 兼容接口（也适用于本地模型）
+    client_kwargs = {
+        "model": model,
+        "openai_api_key": api_key,
+        "temperature": 0.7,
+        "max_tokens": 4096,
+        "timeout": 120,  # LLM 生成可能较慢，给 120 秒
+    }
+    # 仅在配置了 Base URL 时传入，避免空字符串覆盖默认值
+    api_base = settings.LLM_API_BASE.strip()
+    if api_base:
+        client_kwargs["openai_api_base"] = api_base
+    return ChatOpenAI(**client_kwargs)
+
+
 def get_llm_client():
-    """获取 LLM 客户端（单例）"""
+    """
+    获取 LLM 客户端（单例）。
+
+    mock 模式返回 MockLLM；真实模式返回 ResilientLLM，
+    调用链为主模型 + LLM_FALLBACK_MODELS 配置的备用模型。
+    """
     global _llm_client
     if _llm_client is not None:
         return _llm_client
@@ -202,28 +318,25 @@ def get_llm_client():
             "可参考 .env.example 文件。"
         )
 
-    if provider == "anthropic":
-        _llm_client = ChatAnthropic(
-            model=settings.LLM_MODEL,
-            anthropic_api_key=api_key,
-            max_tokens=4096,
-            temperature=0.7,
-        )
-    else:
-        # 默认使用 OpenAI 兼容接口（也适用于本地模型）
-        client_kwargs = {
-            "model": settings.LLM_MODEL,
-            "openai_api_key": api_key,
-            "temperature": 0.7,
-            "max_tokens": 4096,
-            "timeout": 120,  # LLM 生成可能较慢，给 120 秒
-        }
-        # 仅在配置了 Base URL 时传入，避免空字符串覆盖默认值
-        api_base = settings.LLM_API_BASE.strip()
-        if api_base:
-            client_kwargs["openai_api_base"] = api_base
-        _llm_client = ChatOpenAI(**client_kwargs)
+    # 主模型 + 去重后的备用模型（备用模型复用同一 provider / 凭证 / Base URL）
+    targets: list[tuple[str, Any]] = [
+        (settings.LLM_MODEL, _build_chat_client(provider, settings.LLM_MODEL, api_key))
+    ]
+    fallback_names = [
+        name.strip()
+        for name in settings.LLM_FALLBACK_MODELS.split(",")
+        if name.strip() and name.strip() != settings.LLM_MODEL
+    ]
+    for model in fallback_names:
+        targets.append((model, _build_chat_client(provider, model, api_key)))
 
+    logger.info(
+        "LLM 容错链就绪：%s（熔断阈值 %s 次 / 冷却 %s 秒）",
+        " → ".join(name for name, _ in targets),
+        settings.LLM_CIRCUIT_FAILURE_THRESHOLD,
+        settings.LLM_CIRCUIT_RECOVERY_SECONDS,
+    )
+    _llm_client = ResilientLLM(targets)
     return _llm_client
 
 

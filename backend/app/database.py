@@ -28,3 +28,8 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def dispose_engine() -> None:
+    """应用关闭时释放业务库连接池：关闭空闲连接，在用连接标记为用完即关"""
+    engine.dispose()
